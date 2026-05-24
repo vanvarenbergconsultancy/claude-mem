@@ -1,0 +1,683 @@
+openapi: 3.1.0
+info:
+  title: Claude-Mem Admin API
+  version: 1.0.0
+  description: Management plane for claude-mem teams, projects, API keys, observations and jobs.
+
+servers:
+  - url: http://localhost:5200
+    description: Local development
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  # ── Teams ──────────────────────────────────────────────────────────────────
+  /teams:
+    get:
+      operationId: GetTeams
+      summary: List teams (cursor-paginated)
+      tags: [Teams]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamPage'
+        '401':
+          description: Missing or invalid API key
+
+    post:
+      operationId: CreateTeam
+      summary: Create a team
+      tags: [Teams]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTeamRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+        '401':
+          description: Missing or invalid API key
+        '422':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+
+  /teams/{teamId}:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: GetTeam
+      summary: Get a team by ID
+      tags: [Teams]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+  # ── Projects ───────────────────────────────────────────────────────────────
+  /teams/{teamId}/projects:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: GetProjects
+      summary: List projects for a team
+      tags: [Projects]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectPage'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Team not found
+
+    post:
+      operationId: CreateProject
+      summary: Create a project in a team
+      tags: [Projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Team not found
+        '422':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+
+  /teams/{teamId}/projects/{projectId}:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: GetProject
+      summary: Get a project by ID
+      tags: [Projects]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Not found
+
+  # ── API Keys ───────────────────────────────────────────────────────────────
+  /teams/{teamId}/projects/{projectId}/api-keys:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: GetApiKeys
+      summary: List API keys for a project
+      tags: [ApiKeys]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyPage'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Team or project not found
+
+    post:
+      operationId: CreateApiKey
+      summary: Create a new API key for a project
+      tags: [ApiKeys]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: Created — key is shown once only
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyResponse'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Team or project not found
+        '422':
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+
+  /teams/{teamId}/projects/{projectId}/api-keys/{keyId}:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: keyId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: DeleteApiKey
+      summary: Revoke an API key
+      tags: [ApiKeys]
+      responses:
+        '204':
+          description: Revoked
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Not found
+
+  # ── Observations ───────────────────────────────────────────────────────────
+  /teams/{teamId}/projects/{projectId}/observations:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: GetObservations
+      summary: List observations for a project
+      tags: [Observations]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: q
+          in: query
+          description: Full-text search filter
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationPage'
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Team or project not found
+
+  # ── Jobs ───────────────────────────────────────────────────────────────────
+  /jobs:
+    get:
+      operationId: GetJobs
+      summary: List recent jobs across all projects
+      tags: [Jobs]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [waiting, active, completed, failed, delayed]
+        - name: projectId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPage'
+        '401':
+          description: Missing or invalid API key
+
+  /jobs/{jobId}/retry:
+    parameters:
+      - name: jobId
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: RetryJob
+      summary: Re-enqueue a failed job
+      tags: [Jobs]
+      responses:
+        '204':
+          description: Job re-queued
+        '401':
+          description: Missing or invalid API key
+        '404':
+          description: Job not found
+        '422':
+          description: Job is not in failed state
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+  schemas:
+    # ── Pagination ────────────────────────────────────────────────────────────
+    CursorPage:
+      type: object
+      properties:
+        nextCursor:
+          type: string
+          nullable: true
+      required:
+        - nextCursor
+
+    # ── Teams ─────────────────────────────────────────────────────────────────
+    TeamSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        displayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, slug, displayName, createdAt]
+
+    TeamDetail:
+      allOf:
+        - $ref: '#/components/schemas/TeamSummary'
+        - type: object
+          properties:
+            projectCount:
+              type: integer
+          required: [projectCount]
+
+    TeamPage:
+      allOf:
+        - $ref: '#/components/schemas/CursorPage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TeamSummary'
+          required: [items]
+
+    CreateTeamRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[a-z0-9-]+$'
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [slug, displayName]
+
+    # ── Projects ──────────────────────────────────────────────────────────────
+    ProjectSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        teamId:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        displayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, teamId, slug, displayName, createdAt]
+
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/ProjectSummary'
+        - type: object
+          properties:
+            apiKeyCount:
+              type: integer
+            observationCount:
+              type: integer
+          required: [apiKeyCount, observationCount]
+
+    ProjectPage:
+      allOf:
+        - $ref: '#/components/schemas/CursorPage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectSummary'
+          required: [items]
+
+    CreateProjectRequest:
+      type: object
+      properties:
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[a-z0-9-]+$'
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [slug, displayName]
+
+    # ── API Keys ──────────────────────────────────────────────────────────────
+    ApiKeySummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        label:
+          type: string
+        keyPrefix:
+          type: string
+          description: First 8 chars of the key for identification.
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, projectId, label, keyPrefix, createdAt, lastUsedAt]
+
+    ApiKeyPage:
+      allOf:
+        - $ref: '#/components/schemas/CursorPage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApiKeySummary'
+          required: [items]
+
+    CreateApiKeyRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 128
+      required: [label]
+
+    CreateApiKeyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        key:
+          type: string
+          description: Full API key — shown only once, never retrievable again.
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, label, key, createdAt]
+
+    # ── Observations ──────────────────────────────────────────────────────────
+    ObservationSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, projectId, content, createdAt]
+
+    ObservationPage:
+      allOf:
+        - $ref: '#/components/schemas/CursorPage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ObservationSummary'
+          required: [items]
+
+    # ── Jobs ──────────────────────────────────────────────────────────────────
+    JobSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+          format: uuid
+          nullable: true
+        state:
+          type: string
+          enum: [waiting, active, completed, failed, delayed]
+        createdAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failedReason:
+          type: string
+          nullable: true
+      required: [id, projectId, state, createdAt, processedAt, failedReason]
+
+    JobPage:
+      allOf:
+        - $ref: '#/components/schemas/CursorPage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/JobSummary'
+          required: [items]
+
+    # ── Problem Details ───────────────────────────────────────────────────────
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: integer
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
