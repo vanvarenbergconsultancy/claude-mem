@@ -1,0 +1,219 @@
+[*.props]
+indent_style = space
+indent_size = 2
+
+[*.csproj]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+
+# Constants should use PascalCase (no underscore)
+dotnet_naming_rule.constants_should_be_pascal_case.severity = error
+dotnet_naming_rule.constants_should_be_pascal_case.symbols = constants
+dotnet_naming_rule.constants_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+dotnet_naming_symbols.constants.required_modifiers = const
+
+dotnet_naming_style.pascal_case_style.capitalization = pascal_case
+
+# Static readonly fields should use PascalCase (no underscore)
+dotnet_naming_rule.static_readonly_fields_should_be_pascal_case.severity = error
+dotnet_naming_rule.static_readonly_fields_should_be_pascal_case.symbols = static_readonly_fields
+dotnet_naming_rule.static_readonly_fields_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = private, internal, protected, protected_internal, private_protected
+dotnet_naming_symbols.static_readonly_fields.required_modifiers = static, readonly
+
+# Private fields (non-const) MUST start with underscore and use camelCase
+dotnet_naming_rule.private_fields_must_start_with_underscore.severity = error
+dotnet_naming_rule.private_fields_must_start_with_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_must_start_with_underscore.style = underscore_camel_case
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+
+# Prefer NOT using this. and base. prefixes
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
+
+# Prefer expression-bodied members when possible
+csharp_style_prefer_primary_constructors = false:none
+
+# Using directive placement (for SA1200 and modern Roslyn)
+csharp_using_directive_placement = outside_namespace:warning
+
+# StyleCop Rules
+# SA1101: Disable "Prefix local calls with this" (we DON'T want this. prefix)
+dotnet_diagnostic.SA1101.severity = none
+
+# SA1128: Disable "Constructor initializer should be on its own line" (we prefer compact constructors, no separate :this or :base unless the line gets too long)
+dotnet_diagnostic.SA1128.severity = none
+
+# SA1200: Using directives should be placed correctly
+# This rule is controlled by stylecop.json (usingDirectivesPlacement: outsideNamespace)
+dotnet_diagnostic.SA1200.severity = warning
+
+# SA1201: Disable "Elements should appear in the correct order" (prefer fields -> ctor -> props).
+dotnet_diagnostic.SA1201.severity = none
+
+# SA1202: Disable "Elements should be ordered by access" (we prefer logical grouping over strict access-level ordering).
+dotnet_diagnostic.SA1202.severity = none
+
+# SA1204: Disable "Static elements should appear before instance elements" (static helpers may follow the instance members they support).
+dotnet_diagnostic.SA1204.severity = none
+
+# SA1309: Disable "Field names should not begin with underscore" (we WANT underscores)
+dotnet_diagnostic.SA1309.severity = none
+
+# SA1413: Disable "Use trailing comma in multi-line initializers" (we DON'T want trailing commas)
+dotnet_diagnostic.SA1413.severity = none
+
+# SA1516: Disable "Elements should be separated by blank line" (records have compact properties, not configurable per type, so disable for all)
+dotnet_diagnostic.SA1516.severity = none
+
+# SA1623: Disable "Property summary documentation should match accessors" (we don't want repetitive prefixed XML comments on auto-properties)
+dotnet_diagnostic.SA1623.severity = none
+
+# SA1633: Disable "File should have header" (repository has LICENSE file or a README instead of repetitive headers)
+dotnet_diagnostic.SA1633.severity = none
+
+# Awesome Assertion rules
+# FAA0001: Use more specific assertion methods (e.g., .Should().ContainSingle() instead of .Should().HaveCount(1))
+dotnet_diagnostic.FAA0001.severity = warning
+
+# FAA0002: Replace Xunit assertion with Fluent Assertions equivalent
+dotnet_diagnostic.FAA0002.severity = error
+
+# xUnit analyzer rules
+# xUnit1000-xUnit1999: Set all xUnit analyzer rules to warning by default
+# This catches all xUnit analyzer rules including:
+# - xUnit1042: TheoryData<> should be used instead of untyped object[] for MemberData
+# - xUnit1004-xUnit1043: Various test method and theory data validation rules
+dotnet_analyzer_diagnostic.category-xUnit.severity = warning
+
+# "Microsoft.VisualStudio.Threading.Analyzers rules
+# VSTHRD111: Enable "Avoid legacy thread blocking calls" (we want to avoid blocking calls)
+dotnet_diagnostic.VSTHRD111.severity = warning
+
+# VSTHRD200: Disable "Use 'Async' suffix in names of methods that return an awaitable type (This is so old school)"
+dotnet_diagnostic.VSTHRD200.severity = none
+
+# Text.Analyzers rules
+# CA1707: "Identifiers should not contain underscores" - disabled for test projects in Directory.Build.props (we use Hungarian notation: Given_When_Should)
+# CA1704: "Identifiers should be spelled correctly" - custom dictionary added via CustomDictionary.xml
+#   - Test projects: CA1704 is disabled completely via NoWarn in Directory.Build.props to allow Hungarian notation and test-specific naming
+#   - Non-test projects: Custom dictionary contains technical terms (Vvc, Azurite, Async, Env, Uat, etc.)
+
+# SONAR Rules
+# S1135: Disable "Track uses of 'TODO' tags" (we accept TODOs in code for later fixing at this stage, no other issue tracking)
+dotnet_diagnostic.S1135.severity = none
+
+# S2699: Disable "Tests should include assertions" (false positive with base class helper methods, if you do not write assertions in your test you are a special kind of stupid)
+dotnet_diagnostic.S2699.severity = none
+
+# IDE Rules
+# IDE0305: Simplify collection initialization
+dotnet_diagnostic.IDE0305.severity = warning
+
+# Meziantou.Analyzer Rules
+# MA0007: Add a comma after the last value
+dotnet_diagnostic.MA0007.severity = none
+
+# MA0032: Use an overload with a CancellationToken argument (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0032.md)
+# Ensures CancellationToken is passed to method overloads that support it for better cancellation support
+dotnet_diagnostic.MA0032.severity = warning
+
+# MA0104: Do not create a type with a name from the BCL (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0104.md)
+# Prevents naming conflicts with Base Class Library types from System or Microsoft namespaces
+# Applied to public and internal types
+dotnet_diagnostic.MA0104.severity = warning
+dotnet_code_quality.MA0104.only_consider_public_symbols = false
+
+# MA0107: Do not use object.ToString (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0107.md)
+# Warns when calling ToString() without explicit culture on types that use culture-sensitive formatting
+dotnet_diagnostic.MA0107.severity = warning
+
+# MA0112: Use 'Count > 0' instead of 'Any()' (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0112.md)
+# For performance, use Count/Length property instead of Any() when the collection has such a property
+dotnet_diagnostic.MA0112.severity = warning
+
+# MA0121: Do not overwrite parameter value (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0121.md)
+# Warns when Razor component parameter values are overwritten after initial render
+dotnet_diagnostic.MA0121.severity = warning
+
+# MA0127: Use String.Equals instead of is pattern (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0127.md)
+# Enforces explicit string comparison using String.Equals with StringComparison for clarity
+# Note: This rule is disabled by default and must be enabled manually
+dotnet_diagnostic.MA0127.severity = warning
+
+# MA0135: The log parameter has no configured type (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0135.md)
+# Ensures logger parameters are defined in LoggerParameterTypes.txt configuration file
+# Disabled due to specific setup of LoggerParameterTypes.txt in this workspace
+dotnet_diagnostic.MA0135.severity = none
+
+# MA0138: Do not use 'Async' suffix when a method does not return an awaitable type (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0138.md)
+# Prevents using 'Async' suffix on methods that don't return Task, ValueTask, or other awaitable types
+dotnet_diagnostic.MA0138.severity = warning
+
+# Pattern matching rules - to be evaluated later (may have side effects)
+# These rules suggest using pattern matching syntax which can have subtle behavioral differences
+# MA0141: Use pattern matching instead of inequality operators for null check (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0141.md)
+#         Suggests: value is not null instead of value != null
+# MA0142: Use pattern matching instead of equality operators for null check (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0142.md)
+#         Suggests: value is null instead of value == null
+# MA0148: Use pattern matching instead of equality operators for discrete value (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0148.md)
+#         Suggests: value is 1 instead of value == 1
+# MA0149: Use pattern matching instead of inequality operators for discrete value (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0149.md)
+#         Suggests: value is not 1 instead of value != 1
+# MA0171: Use pattern matching instead of HasValue for Nullable<T> check (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0171.md)
+#         Suggests: value is not null instead of value.HasValue
+
+# MA0155: Do not use async void methods (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0155.md)
+# Prevents async void methods which can cause unhandled exceptions; use async Task instead
+dotnet_diagnostic.MA0155.severity = warning
+
+# MA0157: Do not use 'Async' suffix when a method returns IAsyncEnumerable<T> (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0157.md)
+# Methods returning IAsyncEnumerable should not have 'Async' suffix as they return an enumerable, not a task
+dotnet_diagnostic.MA0157.severity = warning
+
+# MA0161: UseShellExecute must be explicitly set (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0161.md)
+# Ensures Process.Start explicitly sets UseShellExecute for cross-platform compatibility
+dotnet_diagnostic.MA0161.severity = warning
+
+# MA0162: Use Process.Start overload with ProcessStartInfo (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0162.md)
+# Requires using ProcessStartInfo parameter to ensure UseShellExecute is explicitly set
+dotnet_diagnostic.MA0162.severity = warning
+
+# MA0168: Use readonly struct for in or ref readonly parameter (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0168.md)
+# Ensures structs passed with 'in' or 'ref readonly' are declared as readonly to avoid defensive copies
+dotnet_diagnostic.MA0168.severity = warning
+
+# MA0170: Type cannot be used as an attribute argument (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0170.md)
+# Validates that attribute parameters use only types allowed by C# language specification
+dotnet_diagnostic.MA0170.severity = warning
+
+# MA0172: Both sides of the logical operation are identical (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0172.md)
+# Detects when both sides of logical operations (&&, ||, ==, etc.) are identical, indicating a bug
+dotnet_diagnostic.MA0172.severity = warning
+
+# MA0175: Record should not use explicit 'class' keyword (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0175.md)
+# Enforces implicit record class declarations without explicit 'class' keyword
+# Note: MA0174 (Record should use explicit 'class' keyword) is the reverse rule and should never be enabled
+dotnet_diagnostic.MA0175.severity = warning
+
+# MA0177: Use single-line XML comment syntax when possible (https://github.com/meziantou/Meziantou.Analyzer/blob/main/docs/Rules/MA0177.md)
+# Suggests condensing multi-line XML comments with single-line content to single-line format for readability
+dotnet_diagnostic.MA0177.severity = warning
+
+# xUnit analyzer rules
+# xUnit1042: TheoryData<> should be used instead of untyped object[] for MemberData
+dotnet_diagnostic.xUnit1042.severity = warning
