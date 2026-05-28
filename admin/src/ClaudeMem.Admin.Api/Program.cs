@@ -1,13 +1,17 @@
-using System;
-using System.IO;
 using ClaudeMem.Admin.Api.Infrastructure.Auth;
 using System.Linq;
+using Dapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
+using System;
+using System.IO;
+using System.Linq;
+using ClaudeMem.Admin.Api.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +19,15 @@ var builder = WebApplication.CreateBuilder(args);
 var apiKey = LoadApiKey(builder.Configuration);
 builder.Services.AddSingleton(new ApiKeyOptions { Key = apiKey });
 builder.Services.AddSingleton<ApiKeyMiddleware>();
+
+// ── Database ──────────────────────────────────────────────────────────────
+DefaultTypeMap.MatchNamesWithUnderscores = true;
+SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
+SqlMapper.AddTypeHandler(new NullableDateTimeOffsetTypeHandler());
+var connectionString = builder.Configuration.GetConnectionString("Default")
+                       ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
+
+builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
 
 // ── MVC ───────────────────────────────────────────────────────────────────
 builder.Services.AddControllers()
