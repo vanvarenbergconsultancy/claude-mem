@@ -1,4 +1,5 @@
 using ClaudeMem.Admin.Api.Infrastructure.Auth;
+using ClaudeMem.Admin.Api.Infrastructure.Pagination;
 using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
 using FluentValidation;
@@ -15,99 +16,145 @@ using System.Linq;
 using ClaudeMem.Admin.Api.Infrastructure;
 using ClaudeMem.Admin.Api.Infrastructure.Database;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace ClaudeMem.Admin.Api;
 
-// ── API key ───────────────────────────────────────────────────────────────
-var apiKey = LoadApiKey(builder.Configuration);
-builder.Services.AddSingleton(new ApiKeyOptions { Key = apiKey });
-builder.Services.AddSingleton<ApiKeyMiddleware>();
-
-// ── Problem details ───────────────────────────────────────────────────────
-builder.Services.AddProblemDetails();
-builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
-
-// ── Mediator + FluentValidation ───────────────────────────────────────────
-builder.Services.AddMediator(options =>
+public class Program
 {
-    options.ServiceLifetime = ServiceLifetime.Scoped;
-    options.PipelineBehaviors = [typeof(ValidationBehavior<,>)];
-});
-
-builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
-
-// ── Database ──────────────────────────────────────────────────────────────
-DefaultTypeMap.MatchNamesWithUnderscores = true;
-SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
-SqlMapper.AddTypeHandler(new NullableDateTimeOffsetTypeHandler());
-var connectionString = builder.Configuration.GetConnectionString("Default")
-                       ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
-
-builder.Services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
-
-// ── MVC ───────────────────────────────────────────────────────────────────
-builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
-
-// Return 422 for semantic validation failures (data annotation constraints like MinimumLength),
-// 400 only for true binding failures where an exception was thrown (e.g. wrong type, malformed JSON).
-builder.Services.Configure<ApiBehaviorOptions>(options =>
-{
-    ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(options);
-});
-
-builder.Services.AddOpenApi();
-
-// ─────────────────────────────────────────────────────────────────────────
-var app = builder.Build();
-
-app.UseExceptionHandler();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseMiddleware<ApiKeyMiddleware>();
-app.MapControllers();
-
-app.Run();
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-static string LoadApiKey(IConfiguration configuration)
-{
-    const string secretPath = "/run/secrets/admin_api_key";
-
-    if (File.Exists(secretPath))
+    public static void Main(string[] args)
     {
-        return File.ReadAllText(secretPath).Trim();
-    }
+        var builder = WebApplication.CreateBuilder(args);
+        var services = builder.Services;
 
-    var adminApiKey = configuration["AdminApiKey"];
-    if (string.IsNullOrWhiteSpace(adminApiKey))
-    {
-        throw new InvalidOperationException("Admin API key is not configured. Mount it as a Docker secret at /run/secrets/admin_api_key or set AdminApiKey in configuration.");
-    }
+        AddApiKeyAuthMiddleware(services, builder.Configuration);
+        AddErrorHandling(services);
+        AddApplicationLayer(services);
 
-    return adminApiKey;
-}
+        AddAccessLayer(services, builder.Configuration);
+        AddApiLayer(services);
 
-static void ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(ApiBehaviorOptions apiBehaviorOptions)
-{
-    apiBehaviorOptions.InvalidModelStateResponseFactory = context =>
-    {
-        var hasBindingFailure = context.ModelState.Values
-            .Any(v => v.Errors.Any(e => e.Exception is not null));
+        var app = builder.Build();
 
-        int status = hasBindingFailure ? StatusCodes.Status400BadRequest : Constants.StatusCodeConventions.ValidationFailedStatusCode;
+        app.UseExceptionHandler();
 
-        var problemDetails = new ValidationProblemDetails(context.ModelState)
+        if (app.Environment.IsDevelopment())
         {
-            Status = status
+            app.MapOpenApi();
+        }
+
+        app.UseMiddleware<ApiKeyMiddleware>();
+        app.MapControllers();
+
+        app.Run();
+    }
+
+    private static void AddApiKeyAuthMiddleware(IServiceCollection services, IConfiguration configuration)
+    {
+        var apiKey = LoadApiKey(configuration);
+        services.AddSingleton(new ApiKeyOptions { Key = apiKey });
+        services.AddSingleton<ApiKeyMiddleware>();
+    }
+
+    private static string LoadApiKey(IConfiguration configuration)
+    {
+        const string secretPath = "/run/secrets/admin_api_key";
+
+        if (File.Exists(secretPath))
+        {
+            return File.ReadAllText(secretPath).Trim();
+        }
+
+        var adminApiKey = configuration["AdminApiKey"];
+        if (string.IsNullOrWhiteSpace(adminApiKey))
+        {
+            throw new InvalidOperationException("Admin API key is not configured. Mount it as a Docker secret at /run/secrets/admin_api_key or set AdminApiKey in configuration.");
+        }
+
+        return adminApiKey;
+    }
+
+    private static void AddErrorHandling(IServiceCollection services)
+    {
+        services.AddProblemDetails();
+        services.AddExceptionHandler<ValidationExceptionHandler>();
+    }
+
+    private static void AddApplicationLayer(IServiceCollection services)
+    {
+        services.AddMediator(options =>
+        {
+            options.ServiceLifetime = ServiceLifetime.Scoped;
+            options.PipelineBehaviors = [typeof(ValidationBehavior<,>)];
+        });
+
+        services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
+    }
+
+    private static void AddAccessLayer(IServiceCollection services, IConfiguration configuration)
+    {
+        ConfigureDapperGlobalSettings();
+        AddDbDataSource(services, configuration);
+        AddAccessLayerServices(services);
+    }
+
+    private static void ConfigureDapperGlobalSettings()
+    {
+        DefaultTypeMap.MatchNamesWithUnderscores = true;
+        SqlMapper.AddTypeHandler(new DateTimeOffsetTypeHandler());
+        SqlMapper.AddTypeHandler(new NullableDateTimeOffsetTypeHandler());
+    }
+
+    private static void AddDbDataSource(IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("Default")
+                               ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
+
+        services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
+    }
+
+    private static void AddAccessLayerServices(IServiceCollection services)
+    {
+        services.AddScoped<Features.Teams.ITeamAccess, Features.Teams.TeamAccess>();
+        services.AddScoped<Features.Projects.Shared.IProjectAccess, Features.Projects.Shared.ProjectAccess>();
+        services.AddScoped<Features.ApiKeys.IApiKeyAccess, Features.ApiKeys.ApiKeyAccess>();
+        services.AddScoped<Features.Observations.IObservationAccess, Features.Observations.ObservationAccess>();
+    }
+
+    private static void AddApiLayer(IServiceCollection services)
+    {
+        services.AddHttpContextAccessor();
+        services.AddSingleton<PaginationLinker>();
+
+        services.AddControllers()
+            .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower);
+
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(options);
+        });
+
+        services.AddOpenApi();
+    }
+
+    /// <summary>
+    /// Return 422 for semantic validation failures (data annotation constraints like MinimumLength),
+    /// 400 only for true binding failures where an exception was thrown (e.g. wrong type, malformed JSON)
+    /// </summary>
+    /// <param name="apiBehaviorOptions"></param>
+    private static void ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(ApiBehaviorOptions apiBehaviorOptions)
+    {
+        apiBehaviorOptions.InvalidModelStateResponseFactory = context =>
+        {
+            var hasBindingFailure = context.ModelState.Values
+                .Any(v => v.Errors.Any(e => e.Exception is not null));
+
+            int status = hasBindingFailure ? StatusCodes.Status400BadRequest : Constants.StatusCodeConventions.ValidationFailedStatusCode;
+
+            var problemDetails = new ValidationProblemDetails(context.ModelState)
+            {
+                Status = status
+            };
+
+            return hasBindingFailure ? new BadRequestObjectResult(problemDetails) : new UnprocessableEntityObjectResult(problemDetails);
         };
-
-        return hasBindingFailure ? new BadRequestObjectResult(problemDetails) : new UnprocessableEntityObjectResult(problemDetails);
-    };
+    }
 }
-
-// Expose for WebApplicationFactory in integration tests
-public partial class Program { }
