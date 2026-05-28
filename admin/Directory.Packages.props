@@ -16,8 +16,9 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
   </ItemGroup>
   <ItemGroup Label="Database">
-    <PackageVersion Include="Dapper" Version="2.1.66" />
-    <PackageVersion Include="Npgsql" Version="9.0.3" />
+    <PackageVersion Include="Dapper" Version="2.1.79" />
+    <PackageVersion Include="Dapper.SqlBuilder" Version="2.1.66" />
+    <PackageVersion Include="Npgsql" Version="10.0.2" />
   </ItemGroup>
   <ItemGroup Label="Testing - Framework">
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />
@@ -59,5 +60,9 @@
     <PackageVersion Include="NJsonSchema.CodeGeneration.CSharp" Version="11.6.1" />
     <PackageVersion Include="NSwag.Core.Yaml" Version="14.7.1" />
     <PackageVersion Include="System.CodeDom" Version="10.0.8" />
+  </ItemGroup>
+  <ItemGroup Label="Extensions">
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.8" />
   </ItemGroup>
 </Project>
