@@ -30,7 +30,7 @@ public class Program
         AddApplicationLayer(services);
 
         AddAccessLayer(services, builder.Configuration);
-        AddApiLayer(services);
+        AddApiLayer(services, builder.Configuration);
 
         var app = builder.Build();
 
@@ -116,13 +116,14 @@ public class Program
         services.AddScoped<Features.Teams.ITeamAccess, Features.Teams.TeamAccess>();
         services.AddScoped<Features.Projects.Shared.IProjectAccess, Features.Projects.Shared.ProjectAccess>();
         services.AddScoped<Features.ApiKeys.IApiKeyAccess, Features.ApiKeys.ApiKeyAccess>();
+        services.AddScoped<Features.Jobs.IJobAccess, Features.Jobs.JobAccess>();
         services.AddScoped<Features.Observations.IObservationAccess, Features.Observations.ObservationAccess>();
     }
 
-    private static void AddApiLayer(IServiceCollection services)
+    private static void AddApiLayer(IServiceCollection services, IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
-        services.AddSingleton<PaginationLinker>();
+        services.AddPagination(CursorEncodingStrategy.Plain, configuration);
 
         services.AddControllers()
             .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower);

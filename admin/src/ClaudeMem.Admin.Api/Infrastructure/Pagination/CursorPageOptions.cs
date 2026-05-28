@@ -9,11 +9,14 @@ internal sealed class CursorPageOptions
     public const int MinPageSize = 1;
     public const int MaxPageSize = 100;
 
-    public CursorPageOptions(ICursorFilter filter)
+    private readonly ICursorEncoder _encoder;
+
+    public CursorPageOptions(ICursorFilter filter, ICursorEncoder encoder)
     {
-        PageSize = Math.Clamp(filter.PageSize ?? DefaultPageSize, MinPageSize, MaxPageSize);
+        _encoder = encoder;
+        PageSize = CalculatePageSize(filter.PageSize);
         FetchCount = PageSize + 1;
-        DecodedCursor = CursorPayload.Decode(filter.Cursor);
+        DecodedCursor = encoder.Decode(filter.Cursor);
     }
 
     public int PageSize { get; }
@@ -28,6 +31,15 @@ internal sealed class CursorPageOptions
         }
 
         rows.RemoveAt(rows.Count - 1);
-        return CursorPayload.Encode(getPayload(rows[^1]));
+
+        return _encoder.Encode(getPayload(rows[^1]));
+    }
+
+    private static int CalculatePageSize(int? filterPageSize)
+    {
+        var pageSize = filterPageSize ?? DefaultPageSize;
+        var pageSizeBetweenMinMaxOrNearestBound = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+        
+        return pageSizeBetweenMinMaxOrNearestBound;
     }
 }
