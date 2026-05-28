@@ -2170,18 +2170,39 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record CursorPage
+    public partial record ResponsePage
     {
-        /// <summary> Initializes a new instance of the <see cref="CursorPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <summary> Initializes a new instance of the <see cref="ResponsePage"/> class. </summary>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public CursorPage(string? @nextCursor)
+        public ResponsePage(System.Uri @self, System.Uri @first, System.Uri? @next)
         {
-            this.NextCursor = @nextCursor;
+            this.Self = @self;
+            this.First = @first;
+            this.Next = @next;
         }
 
-        [System.Text.Json.Serialization.JsonPropertyName("next_cursor")]
-        public string? NextCursor { get; init; }
+        /// <summary>
+        /// Link to the current page.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("self")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Uri Self { get; init; }
+
+        /// <summary>
+        /// Link to the first page.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("first")]
+        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
+        public System.Uri First { get; init; }
+
+        /// <summary>
+        /// Link to the next page. Absent on the last page.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("next")]
+        public System.Uri? Next { get; init; }
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2240,14 +2261,16 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record TeamPage : CursorPage
+    public partial record TeamPage : ResponsePage
     {
         /// <summary> Initializes a new instance of the <see cref="TeamPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         /// <param name="items"></param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public TeamPage(string? @nextCursor, IEnumerable<Team> @items)
-            : base(nextCursor)
+        public TeamPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<Team> @items)
+            : base(self, first, next)
         {
             this.Items = @items;
         }
@@ -2317,14 +2340,16 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record ProjectPage : CursorPage
+    public partial record ProjectPage : ResponsePage
     {
         /// <summary> Initializes a new instance of the <see cref="ProjectPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         /// <param name="items"></param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public ProjectPage(string? @nextCursor, IEnumerable<Project> @items)
-            : base(nextCursor)
+        public ProjectPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<Project> @items)
+            : base(self, first, next)
         {
             this.Items = @items;
         }
@@ -2383,14 +2408,16 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record ApiKeyPage : CursorPage
+    public partial record ApiKeyPage : ResponsePage
     {
         /// <summary> Initializes a new instance of the <see cref="ApiKeyPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         /// <param name="items"></param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public ApiKeyPage(string? @nextCursor, IEnumerable<ApiKey> @items)
-            : base(nextCursor)
+        public ApiKeyPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<ApiKey> @items)
+            : base(self, first, next)
         {
             this.Items = @items;
         }
@@ -2492,14 +2519,16 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record ObservationPage : CursorPage
+    public partial record ObservationPage : ResponsePage
     {
         /// <summary> Initializes a new instance of the <see cref="ObservationPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         /// <param name="items"></param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public ObservationPage(string? @nextCursor, IEnumerable<Observation> @items)
-            : base(nextCursor)
+        public ObservationPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<Observation> @items)
+            : base(self, first, next)
         {
             this.Items = @items;
         }
@@ -2564,14 +2593,16 @@ namespace ClaudeMem.Admin.Api.Contracts
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial record JobPage : CursorPage
+    public partial record JobPage : ResponsePage
     {
         /// <summary> Initializes a new instance of the <see cref="JobPage"/> class. </summary>
-        /// <param name="nextCursor"></param>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
         /// <param name="items"></param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public JobPage(string? @nextCursor, IEnumerable<Job> @items)
-            : base(nextCursor)
+        public JobPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<Job> @items)
+            : base(self, first, next)
         {
             this.Items = @items;
         }

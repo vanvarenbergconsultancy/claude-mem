@@ -399,14 +399,25 @@ components:
 
   schemas:
     # ── Pagination ────────────────────────────────────────────────────────────
-    CursorPage:
+    ResponsePage:
       type: object
-      properties:
-        next_cursor:
-          type: string
-          nullable: true
       required:
-        - next_cursor
+        - self
+        - first
+      properties:
+        self:
+          type: string
+          format: uri
+          description: Link to the current page.
+        first:
+          type: string
+          format: uri
+          description: Link to the first page.
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to the next page. Absent on the last page.
 
     # ── Teams ─────────────────────────────────────────────────────────────────
     Team:
@@ -433,7 +444,7 @@ components:
 
     TeamPage:
       allOf:
-        - $ref: '#/components/schemas/CursorPage'
+        - $ref: '#/components/schemas/ResponsePage'
         - type: object
           properties:
             items:
@@ -475,7 +486,7 @@ components:
 
     ProjectPage:
       allOf:
-        - $ref: '#/components/schemas/CursorPage'
+        - $ref: '#/components/schemas/ResponsePage'
         - type: object
           properties:
             items:
@@ -511,7 +522,7 @@ components:
 
     ApiKeyPage:
       allOf:
-        - $ref: '#/components/schemas/CursorPage'
+        - $ref: '#/components/schemas/ResponsePage'
         - type: object
           properties:
             items:
@@ -556,7 +567,7 @@ components:
 
     ObservationPage:
       allOf:
-        - $ref: '#/components/schemas/CursorPage'
+        - $ref: '#/components/schemas/ResponsePage'
         - type: object
           properties:
             items:
@@ -597,7 +608,7 @@ components:
 
     JobPage:
       allOf:
-        - $ref: '#/components/schemas/CursorPage'
+        - $ref: '#/components/schemas/ResponsePage'
         - type: object
           properties:
             items:
