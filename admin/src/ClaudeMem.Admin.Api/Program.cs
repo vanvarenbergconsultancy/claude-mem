@@ -1,6 +1,7 @@
 using ClaudeMem.Admin.Api.Infrastructure.Auth;
-using System.Linq;
+using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using Npgsql;
 using System;
 using System.IO;
 using System.Linq;
+using ClaudeMem.Admin.Api.Infrastructure;
 using ClaudeMem.Admin.Api.Infrastructure.Database;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,19 @@ var builder = WebApplication.CreateBuilder(args);
 var apiKey = LoadApiKey(builder.Configuration);
 builder.Services.AddSingleton(new ApiKeyOptions { Key = apiKey });
 builder.Services.AddSingleton<ApiKeyMiddleware>();
+
+// ── Problem details ───────────────────────────────────────────────────────
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+
+// ── Mediator + FluentValidation ───────────────────────────────────────────
+builder.Services.AddMediator(options =>
+{
+    options.ServiceLifetime = ServiceLifetime.Scoped;
+    options.PipelineBehaviors = [typeof(ValidationBehavior<,>)];
+});
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>(includeInternalTypes: true);
 
 // ── Database ──────────────────────────────────────────────────────────────
 DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -83,7 +98,7 @@ static void ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(Api
         var hasBindingFailure = context.ModelState.Values
             .Any(v => v.Errors.Any(e => e.Exception is not null));
 
-        int status = hasBindingFailure ? StatusCodes.Status400BadRequest : StatusCodes.Status422UnprocessableEntity;
+        int status = hasBindingFailure ? StatusCodes.Status400BadRequest : Constants.StatusCodeConventions.ValidationFailedStatusCode;
 
         var problemDetails = new ValidationProblemDetails(context.ModelState)
         {
