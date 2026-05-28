@@ -1,0 +1,37 @@
+{% comment %}
+Based on: https://github.com/RicoSuter/NJsonSchema/blob/e591a84c7d00ce128bd076d316016b1bd3dac90d/src/NJsonSchema.CodeGeneration.CSharp/Templates/Class.Constructor.Record.liquid
+Changes:
+- Sort properties as defined in document (not alphabetically)
+- Cleaned up whitespace
+- Added constructor XML documentation
+{% endcomment %}
+
+﻿{%- assign skipComma = true %}
+{% if HasInheritance %}
+{%- assign parentProperties = BaseClass.AllProperties %}
+{% else %}
+{%- assign parentProperties = "" | empty %}
+{% endif %}
+
+{%- assign sortedProperties = AllProperties %}
+{%- assign sortedParentProperties = parentProperties %}
+
+/// <summary> Initializes a new instance of the <see cref="{{ClassName}}"/> class. </summary>
+{%- for property in sortedProperties -%}
+/// <param name="{{property.PropertyName | lowercamelcase}}">{{property.Description | replace: '\r\n', ' ' | replace: '\n', ' ' }}</param>
+{%- endfor -%}
+{%- if UseSystemTextJson -%}
+[System.Text.Json.Serialization.JsonConstructor]
+{%- else -%}
+[Newtonsoft.Json.JsonConstructor]
+{%- endif -%}
+{% if IsAbstract %}protected{% else %}public{% endif %} {{ClassName}}({% for property in sortedProperties %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{ property.Type }} @{{ property.PropertyName | lowercamelcase }}{% endfor %})
+{%- assign skipComma = true -%}
+{%- if HasInheritance -%}
+    : base({%- for property in sortedParentProperties %}{%- if skipComma %}{%- assign skipComma = false %}{% else %}, {% endif %}{{ property.PropertyName | lowercamelcase }}{%- endfor %})
+{%- endif -%}
+{
+{%- for property in Properties -%}
+    this.{{property.PropertyName}} = @{{property.PropertyName | lowercamelcase}};
+{%- endfor -%}
+}

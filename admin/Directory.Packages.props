@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup Label="ASP.NET Core">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
@@ -53,5 +54,11 @@
   <ItemGroup Label="NSwag">
     <PackageVersion Include="NSwag.AspNetCore" Version="14.7.1" />
     <PackageVersion Include="NSwag.CodeGeneration.CSharp" Version="14.7.1" />
+  </ItemGroup>
+  <ItemGroup Label="Code Generation">
+    <PackageVersion Include="Jering.Javascript.NodeJS" Version="7.0.0" />
+    <PackageVersion Include="NJsonSchema.CodeGeneration.CSharp" Version="11.6.1" />
+    <PackageVersion Include="NSwag.Core.Yaml" Version="14.7.1" />
+    <PackageVersion Include="System.CodeDom" Version="10.0.8" />
   </ItemGroup>
 </Project>
