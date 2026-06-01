@@ -30,7 +30,7 @@ public class Program
         AddApplicationLayer(services);
 
         AddAccessLayer(services, builder.Configuration);
-        AddApiLayer(services, builder.Configuration);
+        AddApiLayer(services);
 
         var app = builder.Build();
 
@@ -120,10 +120,10 @@ public class Program
         services.AddScoped<Features.Observations.IObservationAccess, Features.Observations.ObservationAccess>();
     }
 
-    private static void AddApiLayer(IServiceCollection services, IConfiguration configuration)
+    private static void AddApiLayer(IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        services.AddPagination(CursorEncodingStrategy.Plain, configuration);
+        services.AddPlainCursorPagination();
 
         services.AddControllers()
             .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower);

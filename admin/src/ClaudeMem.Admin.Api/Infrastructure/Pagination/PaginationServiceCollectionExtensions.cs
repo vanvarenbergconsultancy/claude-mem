@@ -1,61 +1,43 @@
 using ClaudeMem.Admin.Api.Infrastructure.Pagination.Encrypted;
 using ClaudeMem.Admin.Api.Infrastructure.Pagination.Hmac;
 using ClaudeMem.Admin.Api.Infrastructure.Pagination.Plain;
-using Microsoft.Extensions.Configuration;
+using ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
 public static class PaginationServiceCollectionExtensions
 {
-    public static IServiceCollection AddPagination(this IServiceCollection services, CursorEncodingStrategy strategy, IConfiguration configuration)
+    public static IServiceCollection AddPlainCursorPagination(this IServiceCollection services)
     {
-        AddCorePaginationServices(services);
+        return 
+            services.AddCorePaginationServices()
+            .AddSingleton<ICursorCodec, PlainCursorCodec>();
+    }
 
-        switch (strategy)
-        {
-            case CursorEncodingStrategy.Plain:
-                AddPlainCursorEncoder(services);
-                break;
-            case CursorEncodingStrategy.Hmac:
-                AddHmacCursorEncoder(services, configuration);
-                break;
-            case CursorEncodingStrategy.Encrypted:
-                AddEncryptedCursorEncoder(services, configuration);
-                break;
-        }
+    public static IServiceCollection AddSignedCursorPagination(this IServiceCollection services, SignedCursorOptions options)
+    {
+        return services
+            .AddCorePaginationServices()
+            .AddSingleton<ICursorCodec>(_ => new SignedCursorCodec(options.SigningKey));
+    }
+
+    public static IServiceCollection AddEncryptedCursorPagination(this IServiceCollection services)
+    {
+        services
+            .AddCorePaginationServices()
+            .AddSingleton<ICursorCodec, EncryptedCursorCodec>();
+
+        services.AddDataProtection();
 
         return services;
     }
 
-    public static void AddCorePaginationServices(IServiceCollection services)
+    private static IServiceCollection AddCorePaginationServices(this IServiceCollection services)
     {
-        services.AddSingleton<PaginationLinker>();
-        services.AddExceptionHandler<InvalidCursorExceptionHandler>();
-    }
-
-    public static void AddPlainCursorEncoder(IServiceCollection services)
-    {
-        services.AddSingleton<ICursorEncoder, PlainCursorEncoder>();
-    }
-
-    public static void AddHmacCursorEncoder(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<HmacCursorEncoderOptions>()
-            .Bind(configuration.GetSection("Pagination:Hmac"))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<ICursorEncoder, HmacCursorEncoder>();
-    }
-
-    public static void AddEncryptedCursorEncoder(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddOptions<EncryptedCursorEncoderOptions>()
-            .Bind(configuration.GetSection("Pagination:Encrypted"))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.AddSingleton<ICursorEncoder, EncryptedCursorEncoder>();
+        return services
+            .AddSingleton<PaginationLinker>()
+            .AddExceptionHandler<InvalidCursorExceptionHandler>();
     }
 }

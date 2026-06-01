@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.Hmac;
 
-internal sealed class HmacCursorEncoderOptions
+public sealed record SignedCursorOptions
 {
     [Required]
-    public string SigningKey { get; set; } = string.Empty;
+    public string SigningKey { get; init; } = string.Empty;
 }

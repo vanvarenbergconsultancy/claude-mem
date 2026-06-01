@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
@@ -9,21 +11,29 @@ internal sealed class CursorPageOptions
     public const int MinPageSize = 1;
     public const int MaxPageSize = 100;
 
-    private readonly ICursorEncoder _encoder;
+    private readonly ICursorCodec _codec;
 
-    public CursorPageOptions(ICursorFilter filter, ICursorEncoder encoder)
+    private CursorPageOptions(int pageSize, CursorPayload? decodedCursor, ICursorCodec codec)
     {
-        _encoder = encoder;
-        PageSize = CalculatePageSize(filter.PageSize);
-        FetchCount = PageSize + 1;
-        DecodedCursor = encoder.Decode(filter.Cursor);
+        PageSize = pageSize;
+        FetchCount = pageSize + 1;
+        DecodedCursor = decodedCursor;
+        _codec = codec;
+    }
+
+    public static async Task<CursorPageOptions> CreateAsync(ICursorFilter filter, ICursorCodec codec, CancellationToken cancellationToken = default)
+    {
+        var pageSize = CalculatePageSize(filter.PageSize);
+        var decodedCursor = await codec.Detokenize(filter.Cursor, cancellationToken);
+
+        return new CursorPageOptions(pageSize, decodedCursor, codec);
     }
 
     public int PageSize { get; }
     public int FetchCount { get; }
     public CursorPayload? DecodedCursor { get; }
 
-    public string? TrimAndGetNextCursor<T>(List<T> rows, Func<T, CursorPayload> getPayload)
+    public async Task<string?> TrimAndGetNextCursorAsync<T>(List<T> rows, Func<T, CursorPayload> getPayload, CancellationToken cancellationToken = default)
     {
         if (rows.Count < FetchCount)
         {
@@ -32,14 +42,16 @@ internal sealed class CursorPageOptions
 
         rows.RemoveAt(rows.Count - 1);
 
-        return _encoder.Encode(getPayload(rows[^1]));
+        var cursor = await _codec.Tokenize(getPayload(rows[^1]), cancellationToken);
+
+        return cursor;
     }
 
     private static int CalculatePageSize(int? filterPageSize)
     {
         var pageSize = filterPageSize ?? DefaultPageSize;
-        var pageSizeBetweenMinMaxOrNearestBound = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
-        
-        return pageSizeBetweenMinMaxOrNearestBound;
+
+        // forces a number to stay within a range. If it's already inside, it passes through unchanged. If it's outside, it's pinned to the nearest boundary.
+        return Math.Clamp(pageSize, MinPageSize, MaxPageSize);
     }
 }

@@ -2,44 +2,45 @@ using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Options;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.Hmac;
 
-internal sealed class HmacCursorEncoder : ICursorEncoder
+internal sealed class SignedCursorCodec : ICursorCodec
 {
     private readonly byte[] _keyBytes;
 
-    public HmacCursorEncoder(IOptions<HmacCursorEncoderOptions> options)
+    public SignedCursorCodec(string signingKey)
     {
-        _keyBytes = Encoding.UTF8.GetBytes(options.Value.SigningKey);
+        _keyBytes = Encoding.UTF8.GetBytes(signingKey);
     }
 
-    public string Encode(CursorPayload payload)
+    public Task<string> Tokenize(CursorPayload payload, CancellationToken cancellationToken = default)
     {
         var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(payload);
         var b64 = Convert.ToBase64String(jsonBytes);
         var b64Bytes = Encoding.UTF8.GetBytes(b64);
         var sig = HMACSHA256.HashData(_keyBytes, b64Bytes);
-        
-        return $"{b64}.{Convert.ToBase64String(sig)}";
+
+        return Task.FromResult($"{b64}.{Convert.ToBase64String(sig)}");
     }
 
-    public CursorPayload? Decode(string? cursor)
+    public Task<CursorPayload?> Detokenize(string? token, CancellationToken cancellationToken = default)
     {
-        if (cursor is null)
+        if (token is null)
         {
-            return null;
+            return Task.FromResult<CursorPayload?>(null);
         }
 
-        var dotIndex = cursor.LastIndexOf('.');
+        var dotIndex = token.LastIndexOf('.');
         if (dotIndex < 0)
         {
             throw new InvalidCursorException();
         }
 
-        var b64Part = cursor[..dotIndex];
-        var sigPart = cursor[(dotIndex + 1)..];
+        var b64Part = token[..dotIndex];
+        var sigPart = token[(dotIndex + 1)..];
 
         try
         {
@@ -53,7 +54,7 @@ internal sealed class HmacCursorEncoder : ICursorEncoder
             }
 
             var jsonBytes = Convert.FromBase64String(b64Part);
-            return JsonSerializer.Deserialize<CursorPayload>(jsonBytes);
+            return Task.FromResult(JsonSerializer.Deserialize<CursorPayload>(jsonBytes));
         }
         catch (InvalidCursorException)
         {
