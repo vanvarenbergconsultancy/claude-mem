@@ -34,6 +34,18 @@ public static class PaginationServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers the server-stored cursor codec.
+    /// The caller must also register an <see cref="ICursorStore"/> implementation using one of:
+    /// or a custom implementation of <see cref="ICursorStore"/>.
+    /// </summary>
+    public static IServiceCollection AddServerStoredCursorPagination(this IServiceCollection services)
+    {
+        return services
+            .AddCorePaginationServices()
+            .AddSingleton<ICursorCodec, ServerStoredCursorCodec>();
+    }
+
     private static IServiceCollection AddCorePaginationServices(this IServiceCollection services)
     {
         return services
