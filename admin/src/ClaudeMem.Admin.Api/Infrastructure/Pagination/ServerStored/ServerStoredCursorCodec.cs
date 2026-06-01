@@ -14,7 +14,7 @@ internal sealed class ServerStoredCursorCodec : ICursorCodec
 
     public Task<string> Tokenize(CursorPayload payload, CancellationToken cancellationToken = default)
     {
-        return _store.StoreAsync(payload, cancellationToken);
+        return _store.Store(payload, cancellationToken);
     }
 
     public async Task<CursorPayload?> Detokenize(string? token, CancellationToken cancellationToken = default)
@@ -24,7 +24,7 @@ internal sealed class ServerStoredCursorCodec : ICursorCodec
             return null;
         }
 
-        var payload = await _store.RetrieveAsync(token, cancellationToken);
+        var payload = await _store.Retrieve(token, cancellationToken);
         if(payload is null)
         {
             throw new InvalidCursorException();

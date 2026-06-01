@@ -21,7 +21,7 @@ internal sealed class CursorPageOptions
         _codec = codec;
     }
 
-    public static async Task<CursorPageOptions> CreateAsync(ICursorFilter filter, ICursorCodec codec, CancellationToken cancellationToken = default)
+    public static async Task<CursorPageOptions> Create(ICursorFilter filter, ICursorCodec codec, CancellationToken cancellationToken = default)
     {
         var pageSize = CalculatePageSize(filter.PageSize);
         var decodedCursor = await codec.Detokenize(filter.Cursor, cancellationToken);
@@ -33,7 +33,7 @@ internal sealed class CursorPageOptions
     public int FetchCount { get; }
     public CursorPayload? DecodedCursor { get; }
 
-    public async Task<string?> TrimAndGetNextCursorAsync<T>(List<T> rows, Func<T, CursorPayload> getPayload, CancellationToken cancellationToken = default)
+    public async Task<string?> TrimAndGetNextCursor<T>(List<T> rows, Func<T, CursorPayload> getPayload, CancellationToken cancellationToken = default)
     {
         if (rows.Count < FetchCount)
         {
