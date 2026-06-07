@@ -38,6 +38,8 @@ public static class PaginationServiceCollectionExtensions
     /// Registers the server-stored cursor codec.
     /// The caller must also register an <see cref="ICursorStore"/> implementation using one of:
     /// <see cref="AddInMemoryCursorStore"/>
+    /// <see cref="AddMemoryCacheCursorStore"/>,
+    /// <see cref="AddDistributedCacheCursorStore"/>
     /// or a custom implementation of <see cref="ICursorStore"/>.
     /// </summary>
     public static IServiceCollection AddServerStoredCursorPagination(this IServiceCollection services)
@@ -46,6 +48,7 @@ public static class PaginationServiceCollectionExtensions
             .AddCorePaginationServices()
             .AddSingleton<ICursorCodec, ServerStoredCursorCodec>();
     }
+
     public static IServiceCollection AddInMemoryCursorStore(this IServiceCollection services, ServerStoredCursorOptions options)
     {
         services.AddSingleton(options);
@@ -59,6 +62,26 @@ public static class PaginationServiceCollectionExtensions
         }
 
         return services;
+    }
+
+    public static IServiceCollection AddMemoryCacheCursorStore(this IServiceCollection services, ServerStoredCursorOptions options)
+    {
+        return services
+            .AddMemoryCache()
+            .AddSingleton(options)
+            .AddSingleton<ICursorStore, MemoryCacheCursorStore>();
+    }
+
+    /// <summary>
+    /// Registers the distributed cache cursor store. The caller is responsible for
+    /// registering an <see cref="IDistributedCache"/> implementation (e.g.
+    /// <c>AddStackExchangeRedisCache</c> or <c>AddDistributedMemoryCache</c>).
+    /// </summary>
+    public static IServiceCollection AddDistributedCacheCursorStore(this IServiceCollection services, ServerStoredCursorOptions options)
+    {
+        return services
+            .AddSingleton(options)
+            .AddSingleton<ICursorStore, DistributedCacheCursorStore>();
     }
 
     private static IServiceCollection AddCorePaginationServices(this IServiceCollection services)
