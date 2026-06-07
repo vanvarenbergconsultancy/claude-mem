@@ -22,25 +22,32 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
     private const string EnvVarAdminApiKey = "AdminApiKey";
     private const string EnvVarConnectionString = "ConnectionStrings__Default";
 
-    private IPostgresProvider? _provider;
+    private readonly IPostgresProvider _provider;
     private Respawner? _respawner;
+    private Respawner DatabaseRespawner => _respawner ?? throw new InvalidOperationException($"{nameof(AdminApiFixture)}.{nameof(IAsyncLifetime.InitializeAsync)} has not completed.");
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        // Replace the NpgsqlDataSource that Program.cs registered with one that points at the test container, in case the env var is read at a different time than DI registration.
-        builder.ConfigureTestServices(services =>
-        {
-            services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(_provider!.ConnectionString));
-        });
-    }
+    private HttpClient? _authenticatedClient;
 
-    async Task IAsyncLifetime.InitializeAsync()
+    public AdminApiFixture()
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.Test.json", optional: true)
             .Build();
 
         _provider = PostgresProviderFactory.Create(config);
+    }
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        // Replace the NpgsqlDataSource that Program.cs registered with one that points at the test container, in case the env var is read at a different time than DI registration.
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(_provider.ConnectionString));
+        });
+    }
+
+    async ValueTask IAsyncLifetime.InitializeAsync()
+    {
         await _provider.StartAsync();
 
         // Env vars are the only configuration source readable before WebApplicationFactory callbacks run.
@@ -63,39 +70,41 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
         });
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
-        await DisposeAsync();
+        await base.DisposeAsync();
 
-        if (_provider is not null)
-        {
-            await _provider.StopAsync();
-        }
+        await _provider.StopAsync();
 
         Environment.SetEnvironmentVariable(EnvVarConnectionString, null);
         Environment.SetEnvironmentVariable(EnvVarAdminApiKey, null);
     }
 
-    public string ConnectionString => _provider!.ConnectionString;
+    public string ConnectionString => _provider.ConnectionString;
 
     public HttpClient CreateAuthenticatedClient()
     {
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Add("X-Api-Key", TestApiKey);
+        if (_authenticatedClient is not null)
+        {
+            return _authenticatedClient;
+        }
 
-        return client;
+        _authenticatedClient = CreateClient();
+        _authenticatedClient.DefaultRequestHeaders.Add("X-Api-Key", TestApiKey);
+
+        return _authenticatedClient;
     }
 
     public async Task ResetDatabaseAsync()
     {
-        await using var connection = new NpgsqlConnection(_provider!.ConnectionString);
+        await using var connection = new NpgsqlConnection(_provider.ConnectionString);
         await connection.OpenAsync();
-        await _respawner!.ResetAsync(connection);
+        await DatabaseRespawner.ResetAsync(connection);
     }
 
     private async Task CreateSchemaAsync()
     {
-        await using var connection = new NpgsqlConnection(_provider!.ConnectionString);
+        await using var connection = new NpgsqlConnection(_provider.ConnectionString);
         await connection.OpenAsync();
 
         await using var cmd = connection.CreateCommand();
