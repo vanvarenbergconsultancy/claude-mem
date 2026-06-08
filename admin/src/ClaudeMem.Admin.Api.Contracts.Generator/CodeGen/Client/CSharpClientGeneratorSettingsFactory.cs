@@ -15,7 +15,7 @@ public class CSharpClientGeneratorSettingsFactory : CSharpGeneratorSettingsFacto
     public CSharpClientGeneratorSettings Default(ClientGeneratorOptions options, OpenApiDocument apiDocument)
     {
         var settings = ClientSpecificGeneratorSettings(options);
-        ApplyBaseCSharpGeneratorSettings(settings.CSharpGeneratorSettings, options, apiDocument);
+        ApplyBaseCSharpGeneratorSettings(settings.CSharpGeneratorSettings, options);
         EnableCustomEmbeddedTemplates(settings);
         return settings;
     }

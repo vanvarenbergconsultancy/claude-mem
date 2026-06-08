@@ -22,6 +22,8 @@ internal sealed class TestcontainersPostgresProvider : IPostgresProvider
             .WithDatabase("claude_mem_admin_test")
             .WithUsername("postgres")
             .WithPassword("postgres")
+            .WithReuse(true)
+            .WithLabel("reuse-id", "claude-mem-admin-postgres-test")
             .Build();
 
         try
@@ -40,12 +42,10 @@ internal sealed class TestcontainersPostgresProvider : IPostgresProvider
         ConnectionString = _container.GetConnectionString();
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken = default)
+    public Task StopAsync(CancellationToken cancellationToken = default)
     {
-        if (_container is not null)
-        {
-            await _container.DisposeAsync();
-            _container = null;
-        }
+        // Leave the container alive for the next run; Testcontainers reattaches via the reuse hash.
+        _container = null;
+        return Task.CompletedTask;
     }
 }

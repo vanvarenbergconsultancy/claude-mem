@@ -15,7 +15,7 @@ public class CSharpGeneratorSettingsFactory
         TypesInclusionFactory = typesInclusionFactory;
     }
 
-    protected void ApplyBaseCSharpGeneratorSettings(CSharpGeneratorSettings settings, BaseGeneratorOptions options, OpenApiDocument apiDocument, bool useSystemTextJson = true)
+    protected void ApplyBaseCSharpGeneratorSettings(CSharpGeneratorSettings settings, BaseGeneratorOptions options, bool useSystemTextJson = true)
     {
         SerializerIndependent(settings, options.Namespace);
         if (useSystemTextJson)
@@ -32,7 +32,8 @@ public class CSharpGeneratorSettingsFactory
     {
         settings.ArrayType = "IEnumerable";
         settings.ClassStyle = CSharpClassStyle.Record;
-        settings.ExcludedTypeNames = TypesInclusionFactory.GetExcludedTypeNames().ToArray();
+        var excludedTypeNames = TypesInclusionFactory.GetExcludedTypeNames().ToArray();
+        settings.ExcludedTypeNames = excludedTypeNames;
         settings.GenerateDataAnnotations = true;
         settings.GenerateImmutableArrayProperties = true;
         settings.GenerateNativeRecords = true;

@@ -11,10 +11,12 @@ public interface ITypesInclusionFactory
 
     public IList<string> GetUniqueListForUsingStatements(params string[] additionalNamespaces)
     {
-        return GetIncludedTypeNamespaces()
+        var uniqueNamespacesOfIncludedTypesAndExtraNamespaces = GetIncludedTypeNamespaces()
             .Concat(additionalNamespaces)
             .Where(ns => !string.IsNullOrWhiteSpace(ns))
             .Distinct()
             .ToList();
+
+        return uniqueNamespacesOfIncludedTypesAndExtraNamespaces;
     }
 }
