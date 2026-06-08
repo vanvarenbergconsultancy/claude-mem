@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
+using ClaudeMem.Admin.Api.Contracts;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 using Npgsql;
 using Respawn;
 using Xunit;
@@ -43,6 +45,14 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(_provider.ConnectionString));
+
+            services.AddAdminApiClients("http://localhost", TestApiKey);
+
+            services.ConfigureAll<HttpClientFactoryOptions>(options =>
+            {
+                options.HttpMessageHandlerBuilderActions.Add(b =>
+                    b.PrimaryHandler = Server.CreateHandler());
+            });
         });
     }
 
@@ -81,6 +91,21 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
     }
 
     public string ConnectionString => _provider.ConnectionString;
+
+    private ITeamsClient? _teamsClient;
+    public ITeamsClient TeamsClient => _teamsClient ??= Services.GetRequiredService<ITeamsClient>();
+
+    private IProjectsClient? _projectsClient;
+    public IProjectsClient ProjectsClient => _projectsClient ??= Services.GetRequiredService<IProjectsClient>();
+
+    private IApiKeysClient? _apiKeysClient;
+    public IApiKeysClient ApiKeysClient => _apiKeysClient ??= Services.GetRequiredService<IApiKeysClient>();
+
+    private IObservationsClient? _observationsClient;
+    public IObservationsClient ObservationsClient => _observationsClient ??= Services.GetRequiredService<IObservationsClient>();
+
+    private IJobsClient? _jobsClient;
+    public IJobsClient JobsClient => _jobsClient ??= Services.GetRequiredService<IJobsClient>();
 
     public HttpClient CreateAuthenticatedClient()
     {
