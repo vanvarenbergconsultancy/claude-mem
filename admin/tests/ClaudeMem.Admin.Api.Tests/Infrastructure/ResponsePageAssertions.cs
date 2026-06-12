@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using AwesomeAssertions;
 using ClaudeMem.Admin.Api.Contracts;
 
@@ -6,6 +7,13 @@ namespace ClaudeMem.Admin.Api.Tests.Infrastructure;
 
 internal static class ResponsePageAssertions
 {
+    internal static void ShouldBeEmptyPage<T>(this IResponsePage page, IEnumerable<T> items)
+    {
+        page.Should().NotBeNull();
+        items.Should().BeEmpty();
+        page.Next.Should().BeNull();
+    }
+
     internal static void ShouldBeFirstPage(this IResponsePage page)
     {
         page.Should().NotBeNull();
