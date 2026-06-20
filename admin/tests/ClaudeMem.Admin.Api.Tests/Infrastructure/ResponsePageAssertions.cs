@@ -14,6 +14,14 @@ internal static class ResponsePageAssertions
         page.Next.Should().BeNull();
     }
 
+    internal static void ShouldHaveItems<T>(this IResponsePage page, IEnumerable<T> items, int count)
+    {
+        page.Should().NotBeNull();
+        items.Should()
+            .NotBeNullOrEmpty()
+            .And.HaveCount(count);
+    }
+
     internal static void ShouldBeFirstPage(this IResponsePage page)
     {
         page.Should().NotBeNull();

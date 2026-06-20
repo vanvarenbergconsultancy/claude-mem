@@ -6,12 +6,13 @@ namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
 public sealed class PaginationLinker(IHttpContextAccessor httpContextAccessor)
 {
-    public PageLinks Build(string? selfCursor, string? nextCursor, int pageSize)
+    public PageLinks Build(string? selfCursor, string? nextCursor, int? pageSize)
     {
+        var resolvedPageSize = Math.Clamp(pageSize ?? CursorPageOptions.DefaultPageSize, CursorPageOptions.MinPageSize, CursorPageOptions.MaxPageSize);
         var req = httpContextAccessor.HttpContext!.Request;
-        var first = BuildUri(req, cursor: null, pageSize);
-        var self = BuildUri(req, selfCursor, pageSize);
-        var next = nextCursor is null ? null : BuildUri(req, nextCursor, pageSize);
+        var first = BuildUri(req, cursor: null, resolvedPageSize);
+        var self = BuildUri(req, selfCursor, resolvedPageSize);
+        var next = nextCursor is null ? null : BuildUri(req, nextCursor, resolvedPageSize);
         return new PageLinks(self, first, next);
     }
 
