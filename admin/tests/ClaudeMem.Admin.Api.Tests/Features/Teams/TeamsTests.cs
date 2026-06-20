@@ -120,14 +120,13 @@ public sealed class TeamsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetTeam_NonExistentTeam_ReturnsTeamNotFoundErrorCode()
+    public async Task GetTeam_NonExistentTeam_ReturnsTeamNotFoundProblemType()
     {
         var act = async () => await _teams.TeamsGetAsync("does-not-exist", TestContext.Current.CancellationToken);
 
-        var exception = await act.Should().ThrowAsync<ApiException>();
-        exception.Which.Should()
-            .HaveStatusCode(HttpStatusCode.NotFound)
-            .And.HaveErrorCode("team_not_found");
+        var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
+        exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
+        exception.Which.Result.Type.Should().Be("/problems/team-not-found");
     }
 
     [Fact]

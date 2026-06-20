@@ -44,7 +44,7 @@ internal sealed class ApiExceptionAssertions
         params object[] becauseArgs)
     {
         string? actualCode = null;
-        if (Subject.Response is not null)
+        if (!string.IsNullOrEmpty(Subject.Response))
         {
             using var doc = JsonDocument.Parse(Subject.Response);
             if (doc.RootElement.TryGetProperty("code", out var prop) && prop.ValueKind == JsonValueKind.String)

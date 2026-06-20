@@ -22,13 +22,15 @@ public abstract class ApiControllerBase : ControllerBase
         }
 
         var error = result.Errors[0];
+        var problemType = "/problems/" + error.Code.Replace('_', '-');
+
         return error.Type switch
         {
-            ErrorType.NotFound => NotFound(error),
-            ErrorType.Conflict => Conflict(error),
-            ErrorType.Validation => UnprocessableEntity(error),
-            ErrorType.Forbidden => Forbid(),
-            _ => StatusCode(500, error)
+            ErrorType.NotFound   => Problem(type: problemType, detail: error.Message, statusCode: 404),
+            ErrorType.Conflict   => Problem(type: problemType, detail: error.Message, statusCode: 409),
+            ErrorType.Validation => Problem(type: problemType, detail: error.Message, statusCode: 422),
+            ErrorType.Forbidden  => Forbid(),
+            _                    => Problem(type: problemType, detail: error.Message, statusCode: 500),
         };
     }
 }
