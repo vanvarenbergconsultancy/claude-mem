@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using DotNet.Testcontainers.Builders;
 using Testcontainers.PostgreSql;
 
 namespace ClaudeMem.Admin.Api.Tests.Infrastructure.PostgresProviders;
@@ -26,6 +27,7 @@ internal sealed class TestcontainersPostgresProvider : IPostgresProvider
             .WithPassword("postgres")
             .WithReuse(true)
             .WithLabel("reuse-id", "claude-mem-admin-postgres-test")
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilExternalTcpPortIsAvailable(5432))
             .Build();
 
         try
