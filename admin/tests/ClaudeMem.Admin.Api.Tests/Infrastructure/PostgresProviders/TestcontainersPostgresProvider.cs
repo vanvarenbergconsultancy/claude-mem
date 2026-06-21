@@ -8,7 +8,9 @@ namespace ClaudeMem.Admin.Api.Tests.Infrastructure.PostgresProviders;
 /// <summary> <see cref="IPostgresProvider"/> that spins up an ephemeral <c>postgres:17-alpine</c> container via Testcontainers. </summary>
 /// <remarks>
 /// Requires Docker to be available and running.
-/// On WSL2 without Docker Desktop, expose the Docker daemon over TCP and set <c>DOCKER_HOST=tcp://localhost:2375</c> on Windows before running the tests.
+/// On WSL2 without Docker Desktop, expose the Docker daemon over TCP and set <c>DOCKER_HOST=tcp://127.0.0.1:2375</c>
+/// on Windows before running the tests. Use 127.0.0.1, not localhost — Windows resolves localhost to IPv6 first,
+/// causing a 1-3s timeout per Docker API call before falling back to IPv4.
 /// </remarks>
 internal sealed class TestcontainersPostgresProvider : IPostgresProvider
 {
@@ -35,7 +37,8 @@ internal sealed class TestcontainersPostgresProvider : IPostgresProvider
             throw new InvalidOperationException(
                 "Failed to start PostgreSQL via Testcontainers. Docker must be available and running. " +
                 "On WSL2 without Docker Desktop, expose the Docker daemon over TCP and set " +
-                "DOCKER_HOST=tcp://localhost:2375 on Windows. See README.md for full setup instructions.",
+                "DOCKER_HOST=tcp://127.0.0.1:2375 on Windows (not localhost — see remarks). " +
+                "See README.md for full setup instructions.",
                 ex);
         }
 
