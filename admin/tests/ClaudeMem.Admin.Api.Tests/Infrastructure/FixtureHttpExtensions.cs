@@ -55,6 +55,20 @@ internal static class FixtureHttpExtensions
         return await client.PutAsJsonAsync(path, body, JsonOptions, cancellationToken);
     }
 
+    public static async Task<HttpResponseMessage> DeleteUnauthenticatedAsync(
+        this AdminApiFixture fixture, string path, CancellationToken cancellationToken)
+    {
+        using var client = fixture.CreateClient();
+        return await client.DeleteAsync(path, cancellationToken);
+    }
+
+    public static async Task<HttpResponseMessage> DeleteWithWrongKeyAsync(
+        this AdminApiFixture fixture, string path, CancellationToken cancellationToken)
+    {
+        using var client = CreateWrongKeyClient(fixture);
+        return await client.DeleteAsync(path, cancellationToken);
+    }
+
     private static HttpClient CreateWrongKeyClient(AdminApiFixture fixture)
     {
         var client = fixture.CreateClient();

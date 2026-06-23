@@ -82,4 +82,19 @@ internal static class ApiExceptionAssertionExtensions
         var constraint = await assertions.ThrowAsync<ApiException>();
         constraint.Which.Should().HaveStatusCode(statusCode, because, becauseArgs);
     }
+
+    [CustomAssertion]
+    internal static async Task ThrowProblemDetailsAsync<TTask, TAssertions>(
+        this AsyncFunctionAssertions<TTask, TAssertions> assertions,
+        HttpStatusCode statusCode,
+        string problemType,
+        string because = "",
+        params object[] becauseArgs)
+        where TTask : Task
+        where TAssertions : AsyncFunctionAssertions<TTask, TAssertions>
+    {
+        var constraint = await assertions.ThrowAsync<ApiException<ProblemDetails>>(because, becauseArgs);
+        constraint.Which.Should().HaveStatusCode(statusCode);
+        constraint.Which.Result.Type.Should().Be(problemType);
+    }
 }
