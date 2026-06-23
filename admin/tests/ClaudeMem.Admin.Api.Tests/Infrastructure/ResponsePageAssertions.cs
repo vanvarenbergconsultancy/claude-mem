@@ -7,14 +7,14 @@ namespace ClaudeMem.Admin.Api.Tests.Infrastructure;
 
 internal static class ResponsePageAssertions
 {
-    internal static void ShouldBeEmptyPage<T>(this IResponsePage page, IEnumerable<T> items)
+    public static void ShouldBeEmptyPage<T>(this IResponsePage page, IEnumerable<T> items)
     {
         page.Should().NotBeNull();
         items.Should().BeEmpty();
         page.Next.Should().BeNull();
     }
 
-    internal static void ShouldHaveItems<T>(this IResponsePage page, IEnumerable<T> items, int count)
+    public static void ShouldHaveItems<T>(this IResponsePage page, IEnumerable<T> items, int count)
     {
         page.Should().NotBeNull();
         items.Should()
@@ -22,7 +22,7 @@ internal static class ResponsePageAssertions
             .And.HaveCount(count);
     }
 
-    internal static void ShouldBeFirstPage(this IResponsePage page)
+    public static void ShouldBeFirstPage(this IResponsePage page)
     {
         page.Should().NotBeNull();
         page.Self.Should().NotBeNull();
@@ -31,7 +31,7 @@ internal static class ResponsePageAssertions
         page.Self.Should().Be(page.First);
     }
 
-    internal static void ShouldBeMidPage(this IResponsePage page, Uri expectedFirst)
+    public static void ShouldBeMidPage(this IResponsePage page, Uri expectedFirst)
     {
         page.Should().NotBeNull();
         page.Self.Should().NotBeNull();
@@ -40,7 +40,7 @@ internal static class ResponsePageAssertions
         page.Self.Should().NotBe(page.First);
     }
 
-    internal static void ShouldBeLastPage(this IResponsePage page, Uri expectedFirst)
+    public static void ShouldBeLastPage(this IResponsePage page, Uri expectedFirst)
     {
         page.Should().NotBeNull();
         page.Self.Should().NotBeNull();
@@ -48,7 +48,7 @@ internal static class ResponsePageAssertions
         page.Next.Should().BeNull();
     }
 
-    internal static string? NextCursor(this IResponsePage page)
+    public static string? NextCursor(this IResponsePage page)
     {
         if (page.Next is null)
         {

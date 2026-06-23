@@ -67,11 +67,11 @@ internal sealed class ApiExceptionAssertions
 
 internal static class ApiExceptionAssertionExtensions
 {
-    internal static ApiExceptionAssertions Should(this ApiException instance)
+    public static ApiExceptionAssertions Should(this ApiException instance)
         => new(instance, AssertionChain.GetOrCreate());
 
     [CustomAssertion]
-    internal static async Task ThrowApiExceptionAsync<TTask, TAssertions>(
+    public static async Task ThrowApiExceptionAsync<TTask, TAssertions>(
         this AsyncFunctionAssertions<TTask, TAssertions> assertions,
         HttpStatusCode statusCode,
         string because = "",
@@ -84,7 +84,7 @@ internal static class ApiExceptionAssertionExtensions
     }
 
     [CustomAssertion]
-    internal static async Task ThrowProblemDetailsAsync<TTask, TAssertions>(
+    public static async Task ThrowProblemDetailsAsync<TTask, TAssertions>(
         this AsyncFunctionAssertions<TTask, TAssertions> assertions,
         HttpStatusCode statusCode,
         string problemType,
