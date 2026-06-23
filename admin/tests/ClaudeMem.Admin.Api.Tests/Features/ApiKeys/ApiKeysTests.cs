@@ -109,7 +109,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         using (new AssertionScope("page 1"))
         {
-            p1.Items.Should().HaveCount(3);
+            p1.ShouldHaveItems(p1.Items, 3);
             p1.ShouldBeFirstPage();
         }
 
@@ -117,7 +117,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         using (new AssertionScope("page 2"))
         {
-            p2.Items.Should().HaveCount(3);
+            p2.ShouldHaveItems(p2.Items, 3);
             p2.ShouldBeMidPage(expectedFirst: p1.First);
         }
 
@@ -125,7 +125,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         using (new AssertionScope("page 3"))
         {
-            p3.Items.Should().HaveCount(3);
+            p3.ShouldHaveItems(p3.Items, 3);
             p3.ShouldBeMidPage(expectedFirst: p1.First);
         }
 
@@ -133,7 +133,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         using (new AssertionScope("page 4 (last)"))
         {
-            p4.Items.Should().ContainSingle();
+            p4.ShouldHaveItems(p4.Items, 1);
             p4.ShouldBeLastPage(expectedFirst: p1.First);
         }
     }

@@ -95,28 +95,28 @@ public sealed class JobsTests : IAsyncLifetime
         var p1 = await _jobs.JobsAsync(pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
         using (new AssertionScope("page 1"))
         {
-            p1.Items.Should().HaveCount(3);
+            p1.ShouldHaveItems(p1.Items, 3);
             p1.ShouldBeFirstPage();
         }
 
         var p2 = await _jobs.JobsAsync(cursor: p1.NextCursor(), pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
         using (new AssertionScope("page 2"))
         {
-            p2.Items.Should().HaveCount(3);
+            p2.ShouldHaveItems(p2.Items, 3);
             p2.ShouldBeMidPage(expectedFirst: p1.First);
         }
 
         var p3 = await _jobs.JobsAsync(cursor: p2.NextCursor(), pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
         using (new AssertionScope("page 3"))
         {
-            p3.Items.Should().HaveCount(3);
+            p3.ShouldHaveItems(p3.Items, 3);
             p3.ShouldBeMidPage(expectedFirst: p1.First);
         }
 
         var p4 = await _jobs.JobsAsync(cursor: p3.NextCursor(), pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
         using (new AssertionScope("page 4 (last)"))
         {
-            p4.Items.Should().ContainSingle();
+            p4.ShouldHaveItems(p4.Items, 1);
             p4.ShouldBeLastPage(expectedFirst: p1.First);
         }
     }
