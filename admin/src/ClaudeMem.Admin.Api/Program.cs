@@ -3,6 +3,8 @@ using ClaudeMem.Admin.Api.Infrastructure.Pagination;
 using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +27,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         var services = builder.Services;
 
-        AddApiKeyAuthMiddleware(services, builder.Configuration);
+        AddApiKeyAuth(services, builder.Configuration);
         AddErrorHandling(services);
         AddApplicationLayer(services);
 
@@ -41,17 +43,28 @@ public class Program
             app.MapOpenApi();
         }
 
-        app.UseMiddleware<ApiKeyMiddleware>();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapControllers();
 
         app.Run();
     }
 
-    private static void AddApiKeyAuthMiddleware(IServiceCollection services, IConfiguration configuration)
+    private static void AddApiKeyAuth(IServiceCollection services, IConfiguration configuration)
     {
         var apiKey = LoadApiKey(configuration);
-        services.AddSingleton(new ApiKeyOptions { Key = apiKey });
-        services.AddSingleton<ApiKeyMiddleware>();
+
+        services
+            .AddAuthentication("ApiKey")
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey", options =>
+            {
+                options.Key = apiKey;
+            });
+
+        services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build());
     }
 
     private static string LoadApiKey(IConfiguration configuration)
