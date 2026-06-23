@@ -39,6 +39,8 @@ paths:
                 $ref: '#/components/schemas/TeamPage'
         '401':
           description: Missing or invalid API key
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
     post:
       operationId: CreateTeam
@@ -65,6 +67,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ValidationProblemDetails'
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   /teams/{team_id}:
     parameters:
@@ -86,12 +90,8 @@ paths:
                 $ref: '#/components/schemas/Team'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   # ── Projects ───────────────────────────────────────────────────────────────
   /teams/{team_id}/projects:
@@ -126,8 +126,8 @@ paths:
                 $ref: '#/components/schemas/ProjectPage'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Team not found
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
     post:
       operationId: CreateProject
@@ -148,14 +148,14 @@ paths:
                 $ref: '#/components/schemas/Project'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Team not found
         '422':
           description: Validation error
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ValidationProblemDetails'
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   /teams/{team_id}/projects/{project_id}:
     parameters:
@@ -182,8 +182,8 @@ paths:
                 $ref: '#/components/schemas/Project'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Not found
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   # ── API Keys ───────────────────────────────────────────────────────────────
   /teams/{team_id}/projects/{project_id}/api-keys:
@@ -223,8 +223,8 @@ paths:
                 $ref: '#/components/schemas/ApiKeyPage'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Team or project not found
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
     post:
       operationId: CreateApiKey
@@ -245,14 +245,14 @@ paths:
                 $ref: '#/components/schemas/NewApiKey'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Team or project not found
         '422':
           description: Validation error
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ValidationProblemDetails'
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   /teams/{team_id}/projects/{project_id}/api-keys/{key_id}:
     parameters:
@@ -280,8 +280,8 @@ paths:
           description: Revoked
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Not found
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   # ── Observations ───────────────────────────────────────────────────────────
   /teams/{team_id}/projects/{project_id}/observations:
@@ -326,8 +326,8 @@ paths:
                 $ref: '#/components/schemas/ObservationPage'
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Team or project not found
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   # ── Jobs ───────────────────────────────────────────────────────────────────
   /jobs:
@@ -364,6 +364,8 @@ paths:
                 $ref: '#/components/schemas/JobPage'
         '401':
           description: Missing or invalid API key
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
   /jobs/{job_id}/retry:
     parameters:
@@ -381,18 +383,8 @@ paths:
           description: Job re-queued
         '401':
           description: Missing or invalid API key
-        '404':
-          description: Job not found
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '409':
-          description: Job is not in failed state
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
 
 components:
   securitySchemes:
@@ -400,6 +392,14 @@ components:
       type: apiKey
       in: header
       name: X-Api-Key
+
+  responses:
+    ProblemDetailsError:
+      description: Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
 
   schemas:
     # ── Pagination ────────────────────────────────────────────────────────────
