@@ -189,15 +189,13 @@ public sealed class ApiKeysTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CreateApiKey_NonExistentProject_ReturnsProjectNotFoundProblemType()
+    public async Task CreateApiKey_NonExistentProject_ReturnsProjectTeamMismatchProblemType()
     {
         var teamId = await _db.InsertTeamAsync();
 
         var act = async () => await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "orphan-key", null, null), teamId, "no-such-project", TestContext.Current.CancellationToken);
 
-        var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
-        exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
-        exception.Which.Result.Type.Should().Be("/problems/project-not-found");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
     }
 
     [Fact]

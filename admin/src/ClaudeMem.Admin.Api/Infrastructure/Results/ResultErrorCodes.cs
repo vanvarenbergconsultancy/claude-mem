@@ -3,8 +3,8 @@ namespace ClaudeMem.Admin.Api.Infrastructure.Results;
 public static class ResultErrorCodes
 {
     public static readonly ErrorCode TeamNotFound           = new("team_not_found",             "Team not found.",                                           ErrorType.NotFound);
-    public static readonly ErrorCode ProjectNotFound        = new("project_not_found",          "Project not found.",                                        ErrorType.NotFound);
     // NotFound rather than Conflict or Forbidden: returning 409/403 leaks that the resource exists under another tenant, enabling enumeration attacks.
+    // Also covers genuinely non-existent projects to prevent callers from enumerating valid project IDs across teams.
     public static readonly ErrorCode ProjectTeamMismatch    = new("project_team_mismatch",      "The project does not belong to the specified team.",        ErrorType.NotFound);
     public static readonly ErrorCode ApiKeyNotFound         = new("api_key_not_found",          "API key not found.",                                        ErrorType.NotFound);
     public static readonly ErrorCode ApiKeyTeamMismatch     = new("api_key_team_mismatch", "The API key does not belong to the specified team.",        ErrorType.NotFound);
