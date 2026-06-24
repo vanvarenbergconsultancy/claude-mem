@@ -285,7 +285,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task DeleteApiKey_KeyInDifferentTeam_ReturnsApiKeyTeamMismatchProblemType()
+    public async Task DeleteApiKey_KeyInDifferentTeam_ReturnsApiKeyNotFoundProblemType()
     {
         var team1 = await _db.InsertTeamAsync("T1");
         var team2 = await _db.InsertTeamAsync("T2");
@@ -295,7 +295,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysDeleteAsync(team2, project2, keyId, TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/api-key-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/api-key-not-found");
     }
 
     [Fact]

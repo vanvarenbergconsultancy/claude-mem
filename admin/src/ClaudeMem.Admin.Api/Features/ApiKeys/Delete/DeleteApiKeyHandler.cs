@@ -50,14 +50,9 @@ internal sealed class DeleteApiKeyHandler : ICommandHandler<DeleteApiKeyCommand,
 
     private static ErrorCode? GetMismatchError(DeleteApiKeyCommand command, ApiKeyLookup existingApiKey)
     {
-        if (existingApiKey.TeamId != command.TeamId)
+        if (existingApiKey.TeamId != command.TeamId || existingApiKey.ProjectId != command.ProjectId)
         {
-            return ResultErrorCodes.ApiKeyTeamMismatch;
-        }
-
-        if (existingApiKey.ProjectId != command.ProjectId)
-        {
-            return ResultErrorCodes.ApiKeyProjectMismatch;
+            return ResultErrorCodes.ApiKeyNotFound;
         }
 
         return null;
