@@ -35,9 +35,3 @@ internal sealed class HttpResponseMessageAssertions
         return new AndConstraint<HttpResponseMessageAssertions>(this);
     }
 }
-
-internal static class HttpResponseMessageAssertionExtensions
-{
-    internal static HttpResponseMessageAssertions Should(this HttpResponseMessage instance)
-        => new(instance, AssertionChain.GetOrCreate());
-}
