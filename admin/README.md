@@ -2,6 +2,20 @@
 
 Admin sidecar for the claude-mem server-beta. Provides a secured API and Blazor UI for managing teams, projects, API keys, observations, and jobs.
 
+## Domain model
+
+claude-mem gives Claude Code persistent memory across sessions. The admin API manages the organizational structure and provides visibility into the memory pipeline.
+
+**Teams** — an organization; a group of users sharing a memory pool.
+
+**Projects** — a context scope within a team, typically one codebase or one shared workspace. Claude Code sessions are associated with a project so their memories are kept separate from other projects.
+
+**API Keys** — credentials issued to a team/project. The claude-mem plugin running inside Claude Code authenticates with one of these keys when posting session events to the worker.
+
+**Observations** — the actual stored memories. After each Claude Code session, the worker calls the Claude API to compress raw tool-use events into concise semantic summaries ("learned how pagination works in this repo", "fixed a race condition in the auth middleware"). These summaries are stored as observations and injected as context into future sessions on the same project.
+
+**Jobs** — the async processing queue that turns raw session events into observations. Each event ingested by the worker creates a job (`observation_generation_jobs`). Jobs go through `queued → processing → completed`, or land in `failed` on LLM errors or rate limits. The admin job list gives operators visibility into the pipeline; the retry endpoint resets failed jobs back to `queued` so the worker picks them up again.
+
 ## Prerequisites
 
 - .NET 10 SDK
