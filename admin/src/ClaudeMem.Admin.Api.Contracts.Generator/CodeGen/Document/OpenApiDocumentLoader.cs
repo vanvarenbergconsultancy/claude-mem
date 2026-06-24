@@ -7,6 +7,7 @@ using NSwag;
 
 namespace ClaudeMem.Admin.CodeGen.Document;
 
+/// <summary>Default <see cref="IOpenApiDocumentLoader"/> that bundles remote <c>$ref</c>s via <see cref="ISchemaRemoteRefResolver"/> before parsing.</summary>
 public class OpenApiDocumentLoader : IOpenApiDocumentLoader
 {
     private readonly ISchemaRemoteRefResolver _schemaRemoteRefResolver;
@@ -16,6 +17,7 @@ public class OpenApiDocumentLoader : IOpenApiDocumentLoader
         _schemaRemoteRefResolver = schemaRemoteRefResolver;
     }
 
+    /// <inheritdoc/>
     public async Task<OpenApiDocument> LoadOpenApiDocument(string openApiFilePath, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(openApiFilePath))

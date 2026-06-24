@@ -4,6 +4,7 @@ using Dapper;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Database;
 
+/// <summary>Dapper type handler that maps nullable database values to a nullable <see cref="DateTimeOffset"/>, treating <c>NULL</c> and <see cref="DBNull"/> as <c>null</c>.</summary>
 internal sealed class NullableDateTimeOffsetTypeHandler : SqlMapper.TypeHandler<DateTimeOffset?>
 {
     public override DateTimeOffset? Parse(object value)

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Validation;
 
+/// <summary>Converts FluentValidation <see cref="ValidationException"/> to a 422 Unprocessable Entity problem-details response with field-level errors.</summary>
 internal sealed class ValidationExceptionHandler : IExceptionHandler
 {
     private readonly IProblemDetailsService _problemDetailsService;

@@ -6,8 +6,10 @@ using NSwag;
 
 namespace ClaudeMem.Admin.CodeGen.NameGenerators;
 
+/// <summary>Utility methods that convert arbitrary strings into valid C# identifier names.</summary>
 public static class NameSanitizer
 {
+    /// <summary>Derives a safe C# class name from the OpenAPI document's info title, stripping any trailing "Api" suffix.</summary>
     public static string SanitizeApiTitle(OpenApiDocument document)
     {
         var title = document.Info.Title;
@@ -17,12 +19,15 @@ public static class NameSanitizer
         return sanitized;
     }
 
+    /// <summary>Returns the string with its first character uppercased.</summary>
     public static string CapitalizeFirst(string part)
         => char.ToUpper(part[0], CultureInfo.InvariantCulture) + part.Substring(1);
 
+    /// <summary>Removes a trailing "Api" suffix (case-insensitive) from a string.</summary>
     public static string StripApiSuffix(string part)
         => part.EndsWith("Api", StringComparison.OrdinalIgnoreCase) ? part.Substring(0, part.Length - 3) : part;
 
+    /// <summary>Converts an arbitrary string to a valid C# class-name identifier. Throws if the result would be empty.</summary>
     public static string MakeSafeClassName(string input)
     {
         if (string.IsNullOrWhiteSpace(input))
@@ -34,6 +39,7 @@ public static class NameSanitizer
         return IsKeyword(sanitized) ? $"{sanitized}Class" : sanitized;
     }
 
+    /// <summary>Converts an arbitrary string to a valid C# parameter-name identifier, prefixing with <c>@</c> if it clashes with a keyword.</summary>
     public static string MakeSafeParameterName(string input)
     {
         if (string.IsNullOrWhiteSpace(input))

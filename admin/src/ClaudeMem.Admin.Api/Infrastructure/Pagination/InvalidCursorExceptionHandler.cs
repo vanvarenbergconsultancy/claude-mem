@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
+/// <summary>Converts <see cref="InvalidCursorException"/> to a 400 Bad Request problem-details response.</summary>
 internal sealed class InvalidCursorExceptionHandler : IExceptionHandler
 {
     private readonly IProblemDetailsService _problemDetailsService;

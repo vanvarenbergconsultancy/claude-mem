@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.Encrypted;
 
+/// <summary>Cursor codec that encrypts payloads using ASP.NET Core Data Protection, making them fully opaque and tamper-proof.</summary>
 internal sealed class EncryptedCursorCodec : ICursorCodec
 {
     private readonly IDataProtector _protector;

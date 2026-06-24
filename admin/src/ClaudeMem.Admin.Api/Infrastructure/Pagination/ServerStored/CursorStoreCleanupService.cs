@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
 
+/// <summary>Background service that periodically purges expired cursor tokens from all registered <see cref="ISupportsCursorPurge"/> stores.</summary>
 internal sealed class CursorStoreCleanupService : BackgroundService
 {
     private readonly IEnumerable<ISupportsCursorPurge> _stores;

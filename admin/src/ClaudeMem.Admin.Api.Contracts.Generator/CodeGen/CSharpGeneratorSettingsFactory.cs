@@ -6,8 +6,10 @@ using NSwag;
 
 namespace ClaudeMem.Admin.CodeGen;
 
+/// <summary>Base factory for configuring NSwag <see cref="CSharpGeneratorSettings"/>. Subclasses apply generator-specific settings.</summary>
 public class CSharpGeneratorSettingsFactory
 {
+    /// <summary>The types-inclusion factory used to populate namespace usages and excluded types.</summary>
     protected ITypesInclusionFactory TypesInclusionFactory { get; }
 
     public CSharpGeneratorSettingsFactory(ITypesInclusionFactory typesInclusionFactory)
@@ -15,6 +17,7 @@ public class CSharpGeneratorSettingsFactory
         TypesInclusionFactory = typesInclusionFactory;
     }
 
+    /// <summary>Applies common C# generator settings (namespace, class style, serialiser) from the given options.</summary>
     protected void ApplyBaseCSharpGeneratorSettings(CSharpGeneratorSettings settings, BaseGeneratorOptions options, bool useSystemTextJson = true)
     {
         SerializerIndependent(settings, options.Namespace);

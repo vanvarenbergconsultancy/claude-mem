@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.Hmac;
 
+/// <summary>Cursor codec that appends an HMAC-SHA-256 signature to detect client-side tampering.</summary>
 internal sealed class SignedCursorCodec : ICursorCodec
 {
     private readonly byte[] _keyBytes;

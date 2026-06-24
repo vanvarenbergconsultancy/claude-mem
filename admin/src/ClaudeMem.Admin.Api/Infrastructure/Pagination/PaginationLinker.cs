@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Http;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
+/// <summary>Builds the <see cref="PageLinks"/> URLs included in paged API responses.</summary>
 public sealed class PaginationLinker(IHttpContextAccessor httpContextAccessor)
 {
+    /// <summary>Constructs self, first, and next URLs for the current request, incorporating cursor and page-size parameters.</summary>
     public PageLinks Build(string? selfCursor, string? nextCursor, int? pageSize)
     {
         var resolvedPageSize = Math.Clamp(pageSize ?? CursorPageOptions.DefaultPageSize, CursorPageOptions.MinPageSize, CursorPageOptions.MaxPageSize);

@@ -4,6 +4,7 @@ using ClaudeMem.Admin.CodeGen.NameGenerators;
 
 namespace ClaudeMem.Admin.CodeGen;
 
+/// <summary>Common configuration shared by all code generators.</summary>
 public class BaseGeneratorOptions
 {
     private string _outputFilePath;

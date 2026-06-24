@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Auth;
 
+/// <summary>ASP.NET Core authentication handler that validates the <c>X-Api-Key</c> header against a constant-time hash comparison.</summary>
 internal sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     private const string ApiKeyHeader = "X-Api-Key";

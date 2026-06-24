@@ -3,8 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClaudeMem.Admin.Api.Contracts;
 
+/// <summary>Extension methods for registering Admin API typed HTTP clients.</summary>
 public static class AdminApiServiceCollectionExtensions
 {
+    /// <summary>Registers typed HTTP clients for all Admin API resources, configured with the given base URL and API key.</summary>
     public static IServiceCollection AddAdminApiClients(this IServiceCollection services, string baseUrl, string apiKey)
     {
         services.AddHttpClient<ITeamsClient, TeamsClient>(client => Configure(client, baseUrl, apiKey));

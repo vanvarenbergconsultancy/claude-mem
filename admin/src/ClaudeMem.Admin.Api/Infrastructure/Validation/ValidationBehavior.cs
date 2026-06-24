@@ -7,6 +7,7 @@ using Mediator;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Validation;
 
+/// <summary>Mediator pipeline behavior that runs all registered FluentValidation validators before the handler is invoked.</summary>
 internal sealed class ValidationBehavior<TMessage, TResponse> : IPipelineBehavior<TMessage, TResponse>
     where TMessage : IMessage
 {

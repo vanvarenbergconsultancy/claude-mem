@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
 
+/// <summary>Cursor codec that persists payloads server-side via <see cref="ICursorStore"/> and issues opaque token references to clients.</summary>
 internal sealed class ServerStoredCursorCodec : ICursorCodec
 {
     private readonly ICursorStore _store;

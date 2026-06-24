@@ -6,6 +6,7 @@ using NSwag.CodeGeneration.CSharp;
 
 namespace ClaudeMem.Admin.CodeGen;
 
+/// <summary>Base class for NSwag-backed code generators; handles loading, generating, and saving output files.</summary>
 public abstract class GeneratorBase
 {
     private readonly BaseGeneratorOptions _generatorOptions;
@@ -15,6 +16,7 @@ public abstract class GeneratorBase
         _generatorOptions = generatorOptions;
     }
 
+    /// <summary>Runs the full generate-and-save pipeline.</summary>
     public virtual async Task GenerateCode(CancellationToken cancellationToken = default)
     {
         CreateOutputDirectoryIfNotYetExists();

@@ -4,6 +4,7 @@ using ClaudeMem.Admin.CodeGen.NameGenerators;
 
 namespace ClaudeMem.Admin.CodeGen.Client;
 
+/// <summary>Options specific to the C# typed HTTP client generator.</summary>
 public class ClientGeneratorOptions : BaseGeneratorOptions
 {
     public ClientGeneratorOptions(string @namespace, string inputSpecificationFileName, string outputFilePath = "",

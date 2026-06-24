@@ -6,12 +6,14 @@ using NSwag.CodeGeneration.CSharp;
 
 namespace ClaudeMem.Admin.CodeGen.Client;
 
+/// <summary>Builds <see cref="CSharpClientGeneratorSettings"/> for generating typed HTTP client code from an OpenAPI spec.</summary>
 public class CSharpClientGeneratorSettingsFactory : CSharpGeneratorSettingsFactory
 {
     public CSharpClientGeneratorSettingsFactory(ITypesInclusionFactory typesInclusionFactory) : base(typesInclusionFactory)
     {
     }
 
+    /// <summary>Returns the default settings combining client-specific and base C# settings.</summary>
     public CSharpClientGeneratorSettings Default(ClientGeneratorOptions options, OpenApiDocument apiDocument)
     {
         var settings = ClientSpecificGeneratorSettings(options);

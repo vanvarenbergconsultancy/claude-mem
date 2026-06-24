@@ -1,5 +1,6 @@
 namespace ClaudeMem.Admin.Api.Infrastructure.Results;
 
+/// <summary>Well-known domain error codes returned by command and query handlers.</summary>
 public static class ResultErrorCodes
 {
     public static readonly ErrorCode TeamNotFound           = new("team_not_found",             "Team not found.",                                           ErrorType.NotFound);

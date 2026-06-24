@@ -4,8 +4,10 @@ using NSwag.CodeGeneration.OperationNameGenerators;
 
 namespace ClaudeMem.Admin.CodeGen.NameGenerators;
 
+/// <summary>Groups operations into clients by the first non-parameter path segment (e.g. <c>/teams/{id}</c> → <c>TeamsClient</c>).</summary>
 public class OperationNameGeneratorMultipleControllersByPathSegmentsWithOperationNameMethods : MultipleClientsFromPathSegmentsOperationNameGenerator
 {
+    /// <inheritdoc/>
     public override string GetClientName(OpenApiDocument document, string path, string httpMethod, OpenApiOperation operation)
     {
         var pathSegments = path.Split('/');

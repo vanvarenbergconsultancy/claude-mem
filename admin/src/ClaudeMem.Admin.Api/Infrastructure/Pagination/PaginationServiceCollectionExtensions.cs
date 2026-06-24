@@ -7,15 +7,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ClaudeMem.Admin.Api.Infrastructure.Pagination;
 
+/// <summary>Extension methods for registering cursor-based pagination services.</summary>
 public static class PaginationServiceCollectionExtensions
 {
+    /// <summary>Registers unprotected (plain base-64) cursor pagination — suitable for non-sensitive, trusted environments only.</summary>
     public static IServiceCollection AddPlainCursorPagination(this IServiceCollection services)
     {
-        return 
+        return
             services.AddCorePaginationServices()
             .AddSingleton<ICursorCodec, PlainCursorCodec>();
     }
 
+    /// <summary>Registers HMAC-SHA-256 signed cursor pagination, preventing clients from forging or tampering with cursors.</summary>
     public static IServiceCollection AddSignedCursorPagination(this IServiceCollection services, SignedCursorOptions options)
     {
         return services
@@ -23,6 +26,7 @@ public static class PaginationServiceCollectionExtensions
             .AddSingleton<ICursorCodec>(_ => new SignedCursorCodec(options.SigningKey));
     }
 
+    /// <summary>Registers ASP.NET Core Data Protection encrypted cursor pagination, fully opaque to clients.</summary>
     public static IServiceCollection AddEncryptedCursorPagination(this IServiceCollection services)
     {
         services
@@ -49,6 +53,7 @@ public static class PaginationServiceCollectionExtensions
             .AddSingleton<ICursorCodec, ServerStoredCursorCodec>();
     }
 
+    /// <summary>Registers the in-process memory cursor store. Cursors are lost on restart; suitable for development or single-instance deployments.</summary>
     public static IServiceCollection AddInMemoryCursorStore(this IServiceCollection services, ServerStoredCursorOptions options)
     {
         services.AddSingleton(options);
@@ -64,6 +69,7 @@ public static class PaginationServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>Registers the in-process memory-cache cursor store. Suitable for single-instance deployments; eviction is handled by the cache.</summary>
     public static IServiceCollection AddMemoryCacheCursorStore(this IServiceCollection services, ServerStoredCursorOptions options)
     {
         return services
