@@ -1,6 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 using AwesomeAssertions.Specialized;
 using ClaudeMem.Admin.Api.Contracts;
 
