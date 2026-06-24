@@ -19,7 +19,7 @@ namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
 /// </remarks>
 internal sealed class InMemoryCursorStore : ICursorStore, ISupportsCursorPurge
 {
-    private readonly ConcurrentDictionary<string, (CursorPayload Payload, DateTimeOffset Expiry)> _store = new();
+    private readonly ConcurrentDictionary<string, (CursorPayload Payload, DateTimeOffset Expiry)> _store = new(StringComparer.Ordinal);
     private readonly ServerStoredCursorOptions _options;
 
     public InMemoryCursorStore(ServerStoredCursorOptions options)
