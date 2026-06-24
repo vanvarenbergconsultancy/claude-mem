@@ -18,7 +18,8 @@ public static class AdminApiServiceCollectionExtensions
 
     private static void Configure(System.Net.Http.HttpClient client, string baseUrl, string apiKey)
     {
-        client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + '/');
+        var trimmedBaseUrl = $"{baseUrl.TrimEnd('/')}/";
+        client.BaseAddress = new Uri(trimmedBaseUrl);
         client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
     }
 }

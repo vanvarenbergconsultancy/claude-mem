@@ -48,43 +48,8 @@ dotnet_style_qualification_for_event = false:warning
 # Prefer expression-bodied members when possible
 csharp_style_prefer_primary_constructors = false:none
 
-# Using directive placement (for SA1200 and modern Roslyn)
+# Using directive placement
 csharp_using_directive_placement = outside_namespace:warning
-
-# StyleCop Rules
-# SA1101: Disable "Prefix local calls with this" (we DON'T want this. prefix)
-dotnet_diagnostic.SA1101.severity = none
-
-# SA1128: Disable "Constructor initializer should be on its own line" (we prefer compact constructors, no separate :this or :base unless the line gets too long)
-dotnet_diagnostic.SA1128.severity = none
-
-# SA1200: Using directives should be placed correctly
-# This rule is controlled by stylecop.json (usingDirectivesPlacement: outsideNamespace)
-dotnet_diagnostic.SA1200.severity = warning
-
-# SA1201: Disable "Elements should appear in the correct order" (prefer fields -> ctor -> props).
-dotnet_diagnostic.SA1201.severity = none
-
-# SA1202: Disable "Elements should be ordered by access" (we prefer logical grouping over strict access-level ordering).
-dotnet_diagnostic.SA1202.severity = none
-
-# SA1204: Disable "Static elements should appear before instance elements" (static helpers may follow the instance members they support).
-dotnet_diagnostic.SA1204.severity = none
-
-# SA1309: Disable "Field names should not begin with underscore" (we WANT underscores)
-dotnet_diagnostic.SA1309.severity = none
-
-# SA1413: Disable "Use trailing comma in multi-line initializers" (we DON'T want trailing commas)
-dotnet_diagnostic.SA1413.severity = none
-
-# SA1516: Disable "Elements should be separated by blank line" (records have compact properties, not configurable per type, so disable for all)
-dotnet_diagnostic.SA1516.severity = none
-
-# SA1623: Disable "Property summary documentation should match accessors" (we don't want repetitive prefixed XML comments on auto-properties)
-dotnet_diagnostic.SA1623.severity = none
-
-# SA1633: Disable "File should have header" (repository has LICENSE file or a README instead of repetitive headers)
-dotnet_diagnostic.SA1633.severity = none
 
 # Awesome Assertion rules
 # FAA0001: Use more specific assertion methods (e.g., .Should().ContainSingle() instead of .Should().HaveCount(1))
