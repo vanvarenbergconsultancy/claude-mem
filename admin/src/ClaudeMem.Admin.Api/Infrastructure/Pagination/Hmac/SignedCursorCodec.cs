@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -16,21 +17,23 @@ internal sealed class SignedCursorCodec : ICursorCodec
         _keyBytes = Encoding.UTF8.GetBytes(signingKey);
     }
 
-    public Task<string> Tokenize(CursorPayload payload, CancellationToken cancellationToken = default)
+    public async Task<string> Tokenize(CursorPayload payload, CancellationToken cancellationToken = default)
     {
         var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(payload);
         var b64 = Convert.ToBase64String(jsonBytes);
         var b64Bytes = Encoding.UTF8.GetBytes(b64);
-        var sig = HMACSHA256.HashData(_keyBytes, b64Bytes);
 
-        return Task.FromResult($"{b64}.{Convert.ToBase64String(sig)}");
+        await using var b64Stream = new MemoryStream(b64Bytes);
+        var sig = await HMACSHA256.HashDataAsync(_keyBytes, b64Stream, cancellationToken);
+
+        return $"{b64}.{Convert.ToBase64String(sig)}";
     }
 
-    public Task<CursorPayload?> Detokenize(string? token, CancellationToken cancellationToken = default)
+    public async Task<CursorPayload?> Detokenize(string? token, CancellationToken cancellationToken = default)
     {
         if (token is null)
         {
-            return Task.FromResult<CursorPayload?>(null);
+            return null;
         }
 
         var dotIndex = token.LastIndexOf('.');
@@ -45,7 +48,9 @@ internal sealed class SignedCursorCodec : ICursorCodec
         try
         {
             var b64Bytes = Encoding.UTF8.GetBytes(b64Part);
-            var expectedSig = HMACSHA256.HashData(_keyBytes, b64Bytes);
+
+            await using var b64Stream = new MemoryStream(b64Bytes);
+            var expectedSig = await HMACSHA256.HashDataAsync(_keyBytes, b64Stream, cancellationToken);
             var actualSig = Convert.FromBase64String(sigPart);
 
             if (!CryptographicOperations.FixedTimeEquals(expectedSig, actualSig))
@@ -54,7 +59,7 @@ internal sealed class SignedCursorCodec : ICursorCodec
             }
 
             var jsonBytes = Convert.FromBase64String(b64Part);
-            return Task.FromResult(JsonSerializer.Deserialize<CursorPayload>(jsonBytes));
+            return JsonSerializer.Deserialize<CursorPayload>(jsonBytes);
         }
         catch (InvalidCursorException)
         {
