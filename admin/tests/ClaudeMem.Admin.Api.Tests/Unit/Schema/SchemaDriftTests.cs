@@ -26,11 +26,11 @@ public sealed class SchemaDriftTests
     public void EmbeddedSchema_MatchesCanonicalTypeScriptSource()
     {
         var tsContent = File.ReadAllText(SchemaSourcePath);
-        var match = Regex.Match(tsContent, @"PHASE_1_SCHEMA_SQL\s*=\s*`([^`]+)`", RegexOptions.Singleline);
+        var match = Regex.Match(tsContent, @"PHASE_1_SCHEMA_SQL\s*=\s*`(?<sql>[^`]+)`", RegexOptions.Singleline | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(10));
 
         match.Success.Should().BeTrue("PHASE_1_SCHEMA_SQL constant must exist in schema.ts");
 
-        var canonical = NormalizeSQL(match.Groups[1].Value);
+        var canonical = NormalizeSQL(match.Groups["sql"].Value);
         var embedded = NormalizeSQL(LoadEmbeddedSchema());
 
         embedded.Should().Be(canonical,
@@ -39,7 +39,7 @@ public sealed class SchemaDriftTests
     }
 
     private static string NormalizeSQL(string sql) =>
-        Regex.Replace(sql.Trim(), @"\s+", " ");
+        Regex.Replace(sql.Trim(), @"\s+", " ", RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(10));
 
     private static string LoadEmbeddedSchema()
     {
