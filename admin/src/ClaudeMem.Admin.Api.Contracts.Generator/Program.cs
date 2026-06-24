@@ -1,6 +1,7 @@
 using System;
 using System.IO;
-using ClaudeMem.Admin.Api.Contracts.Generator;
+using System.Threading;
+using ClaudeMem.Admin.CodeGen;
 using ClaudeMem.Admin.CodeGen.Client;
 using ClaudeMem.Admin.CodeGen.NameGenerators;
 
@@ -13,5 +14,5 @@ await new ClientGenerator(new ClientGeneratorOptions(
     outputFilePath: Path.Combine(repoRoot, "src/ClaudeMem.Admin.Api.Contracts/Client/AdminApiClient.generated.cs"),
     useSystemTextJson: true,
     operationNameGenerator: OperationNameGenerator.MultipleControllersByTagWithPathSegmentsMethods,
-    typesInclusionFactory: new AdminApiClientTypesInclusionFactory()
+    typesInclusionFactory: new TypesInclusionFactory()
 )).GenerateCode();

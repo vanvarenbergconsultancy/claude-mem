@@ -14,7 +14,7 @@ public class ClientGeneratorOptions : BaseGeneratorOptions
         OperationNameGenerator operationNameGenerator = OperationNameGenerator.SingleControllerWithPathSegmentsMethods)
         : base(@namespace, inputSpecificationFileName, outputFilePath, additionalNamespaceUsages, useSystemTextJson,
             schemaRemoteRefResolver, openApiDocumentLoader,
-            typesInclusionFactory ?? new ClientTypesInclusionFactory(),
+            typesInclusionFactory ?? new TypesInclusionFactory(),
             operationNameGenerator)
     {
     }

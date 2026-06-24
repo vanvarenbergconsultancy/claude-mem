@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -5,11 +6,11 @@ namespace ClaudeMem.Admin.CodeGen;
 
 public interface ITypesInclusionFactory
 {
-    IList<string> GetExcludedTypeNames();
+    IReadOnlyList<string> GetExcludedTypeNames();
 
-    IList<string> GetIncludedTypeNamespaces();
+    IReadOnlyList<string> GetIncludedTypeNamespaces();
 
-    public IList<string> GetUniqueListForUsingStatements(params string[] additionalNamespaces)
+    public IReadOnlyList<string> GetUniqueListForUsingStatements(params string[] additionalNamespaces)
     {
         var uniqueNamespacesOfIncludedTypesAndExtraNamespaces = GetIncludedTypeNamespaces()
             .Concat(additionalNamespaces)
