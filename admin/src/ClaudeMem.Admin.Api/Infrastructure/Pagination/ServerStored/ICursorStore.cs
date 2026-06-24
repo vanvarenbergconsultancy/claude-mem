@@ -20,7 +20,7 @@ internal interface ICursorStore
     /// <summary>Persists <paramref name="payload"/> and returns an opaque token that can retrieve it later.</summary>
     Task<string> Store(CursorPayload payload, CancellationToken cancellationToken = default);
 
-    /// <summary>Retrieves the payload associated with <paramref name="token"/>.</summary>
+    /// <summary>Retrieves the payload associated with <paramref name="opaqueToken"/>.</summary>
     /// <returns><c>null</c> if the token is not found or has expired.</returns>
-    Task<CursorPayload?> Retrieve(string token, CancellationToken cancellationToken = default);
+    Task<CursorPayload?> Retrieve(string opaqueToken, CancellationToken cancellationToken = default);
 }

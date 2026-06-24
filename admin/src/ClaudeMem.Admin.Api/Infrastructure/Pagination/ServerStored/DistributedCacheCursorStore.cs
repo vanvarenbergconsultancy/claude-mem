@@ -44,9 +44,9 @@ internal sealed class DistributedCacheCursorStore : ICursorStore
         return newOpaqueToken;
     }
 
-    public async Task<CursorPayload?> Retrieve(string newOpaqueToken, CancellationToken cancellationToken = default)
+    public async Task<CursorPayload?> Retrieve(string opaqueToken, CancellationToken cancellationToken = default)
     {
-        var bytes = await _cache.GetAsync(newOpaqueToken, cancellationToken);
+        var bytes = await _cache.GetAsync(opaqueToken, cancellationToken);
         if (bytes is null)
         {
             return null;
