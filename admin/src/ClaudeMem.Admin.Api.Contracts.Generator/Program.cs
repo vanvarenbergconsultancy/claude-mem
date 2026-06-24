@@ -15,4 +15,4 @@ await new ClientGenerator(new ClientGeneratorOptions(
     useSystemTextJson: true,
     operationNameGenerator: OperationNameGenerator.MultipleControllersByTagWithPathSegmentsMethods,
     typesInclusionFactory: new TypesInclusionFactory()
-)).GenerateCode();
+)).GenerateCode(CancellationToken.None);
