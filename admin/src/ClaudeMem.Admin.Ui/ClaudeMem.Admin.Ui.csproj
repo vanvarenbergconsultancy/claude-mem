@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>ClaudeMem.Admin.Ui</RootNamespace>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <MudAllowedAttributePattern>LowerCase</MudAllowedAttributePattern>
   </PropertyGroup>
 
   <ItemGroup>

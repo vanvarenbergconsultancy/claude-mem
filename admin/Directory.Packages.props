@@ -5,7 +5,13 @@
   </PropertyGroup>
   <ItemGroup Label="ASP.NET Core">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
-    <PackageVersion Include="MudBlazor" Version="9.4.0" />
+    <PackageVersion Include="MudBlazor" Version="9.5.0" />
+  </ItemGroup>
+  <ItemGroup Label="Analyzers">
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.112" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="18.7.23" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.27.0.140913" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
   <ItemGroup Label="Mediator">
     <PackageVersion Include="Mediator.Abstractions" Version="3.0.2" />

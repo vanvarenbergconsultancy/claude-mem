@@ -2,17 +2,41 @@
   "version": 2,
   "dependencies": {
     "net10.0": {
+      "Meziantou.Analyzer": {
+        "type": "Direct",
+        "requested": "[3.0.112, )",
+        "resolved": "3.0.112",
+        "contentHash": "4JC9VDw4HrCxYgHxFjADIwTemRZTZEZEAYs6+4fkMLmX0YPzP1pNPaC1WaP9zlpqdLiKLSItVh6fgHvUsYNTdQ=="
+      },
       "Microsoft.AspNetCore.App.Internal.Assets": {
         "type": "Direct",
         "requested": "[10.0.9, )",
         "resolved": "10.0.9",
         "contentHash": "E9Wp/LPKAYkGOVBv4lt5U5TnUA/7pov7QZAwF3eI64kK8AAXqkPDwuadEOwpL1WXEfgecYm0fccluvABp32D8g=="
       },
+      "Microsoft.VisualStudio.Threading.Analyzers": {
+        "type": "Direct",
+        "requested": "[18.7.23, )",
+        "resolved": "18.7.23",
+        "contentHash": "dyj6z8m+LFjpeH69hdnciCcRCmD0YgMlvuQEywiEshjqj/blgQ+PuWX8Vd5gkWQFoBN4e+TFxx6DvGNSv/gIKg=="
+      },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[9.4.0, )",
-        "resolved": "9.4.0",
-        "contentHash": "p6BF8zmt4c/yi/hD9hP7yPioUK5loOnif19gwIEANq6I46407QnSu0HTW1NuALC5seRKcWb2pBP5LwC8aBE2Mg=="
+        "requested": "[9.5.0, )",
+        "resolved": "9.5.0",
+        "contentHash": "mZiuKdOG42RkA/cZhiwNwbBZAKBExDx387ylvxzokcenRFHi8n4tq8olGuXs/oWNX1Qgo7Tj7J0AhOjjSnTpcw=="
+      },
+      "SonarAnalyzer.CSharp": {
+        "type": "Direct",
+        "requested": "[10.27.0.140913, )",
+        "resolved": "10.27.0.140913",
+        "contentHash": "cxk12QjN9io1SjN36B1QO+9dRf+ek2CGfQGsOWtHBojE35cKchKJod48raxZwe47jHhzmAUO4AJSh7+hF0GS4g=="
+      },
+      "StyleCop.Analyzers": {
+        "type": "Direct",
+        "requested": "[1.1.118, )",
+        "resolved": "1.1.118",
+        "contentHash": "Onx6ovGSqXSK07n/0eM3ZusiNdB6cIlJdabQhWGgJp3Vooy9AaLS/tigeybOJAobqbtggTamoWndz72JscZBvw=="
       },
       "claudemem.admin.api.contracts": {
         "type": "Project"

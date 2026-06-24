@@ -28,6 +28,15 @@
     <NoWarn>$(NoWarn);CA1707;SA1600;SA0001;VSTHRD111;MA0004;MA0032</NoWarn>
   </PropertyGroup>
 
+  <!-- Global analyzers: versions pinned in Directory.Packages.props -->
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="SonarAnalyzer.CSharp" PrivateAssets="all" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" />
+  </ItemGroup>
+
   <!-- InternalsVisibleTo: every src project exposes internals to its test counterpart -->
   <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

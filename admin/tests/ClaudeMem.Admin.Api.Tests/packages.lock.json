@@ -26,6 +26,12 @@
         "resolved": "2.1.79",
         "contentHash": "8YijbzgTfmqmQOnVNorYM6K++pxqnW3nJ4aC1sRHzxUA2CcuoJ9gsTem3kgBnPRMc38zZHl4Esb6hAezXIEEuw=="
       },
+      "Meziantou.Analyzer": {
+        "type": "Direct",
+        "requested": "[3.0.112, )",
+        "resolved": "3.0.112",
+        "contentHash": "4JC9VDw4HrCxYgHxFjADIwTemRZTZEZEAYs6+4fkMLmX0YPzP1pNPaC1WaP9zlpqdLiKLSItVh6fgHvUsYNTdQ=="
+      },
       "Microsoft.AspNetCore.Mvc.Testing": {
         "type": "Direct",
         "requested": "[10.0.8, )",
@@ -46,6 +52,12 @@
           "Microsoft.CodeCoverage": "18.5.1",
           "Microsoft.TestPlatform.TestHost": "18.5.1"
         }
+      },
+      "Microsoft.VisualStudio.Threading.Analyzers": {
+        "type": "Direct",
+        "requested": "[18.7.23, )",
+        "resolved": "18.7.23",
+        "contentHash": "dyj6z8m+LFjpeH69hdnciCcRCmD0YgMlvuQEywiEshjqj/blgQ+PuWX8Vd5gkWQFoBN4e+TFxx6DvGNSv/gIKg=="
       },
       "Npgsql": {
         "type": "Direct",
@@ -76,6 +88,18 @@
         "requested": "[7.0.0, )",
         "resolved": "7.0.0",
         "contentHash": "AyWlducZGOnmlEVz4PaL3Qv8wcY3ClPZS9CrlDnSVahGd/E9tTEgSFiC8yoV/F6o6P6IYm8xnHFa/vmWT8tfcw=="
+      },
+      "SonarAnalyzer.CSharp": {
+        "type": "Direct",
+        "requested": "[10.27.0.140913, )",
+        "resolved": "10.27.0.140913",
+        "contentHash": "cxk12QjN9io1SjN36B1QO+9dRf+ek2CGfQGsOWtHBojE35cKchKJod48raxZwe47jHhzmAUO4AJSh7+hF0GS4g=="
+      },
+      "StyleCop.Analyzers": {
+        "type": "Direct",
+        "requested": "[1.1.118, )",
+        "resolved": "1.1.118",
+        "contentHash": "Onx6ovGSqXSK07n/0eM3ZusiNdB6cIlJdabQhWGgJp3Vooy9AaLS/tigeybOJAobqbtggTamoWndz72JscZBvw=="
       },
       "Testcontainers.PostgreSql": {
         "type": "Direct",
