@@ -111,12 +111,12 @@ public sealed class TeamsTests : IAsyncLifetime
         var teamId = await _db.InsertTeamAsync("Detail Team");
         await _db.InsertProjectAsync(teamId, "Project A");
 
-        var detail = await _teams.TeamsGetAsync(teamId, TestContext.Current.CancellationToken);
+        var team = await _teams.TeamsGetAsync(teamId, TestContext.Current.CancellationToken);
 
-        detail.Should().NotBeNull();
-        detail.Id.Should().Be(teamId);
-        detail.Name.Should().Be("Detail Team");
-        detail.ProjectCount.Should().Be(1);
+        team.Should().NotBeNull();
+        team.Id.Should().Be(teamId);
+        team.Name.Should().Be("Detail Team");
+        team.ProjectCount.Should().Be(1);
     }
 
     [Fact]
@@ -150,12 +150,12 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task CreateTeam_ValidRequest_ReturnsCreatedTeam()
     {
-        var detail = await _teams.TeamsPostAsync(new Team(null, "My New Team", null, null), TestContext.Current.CancellationToken);
+        var team = await _teams.TeamsPostAsync(new Team(null, "My New Team", null, null), TestContext.Current.CancellationToken);
 
-        detail.Should().NotBeNull();
-        detail.Name.Should().Be("My New Team");
-        detail.Id.Should().NotBeNullOrEmpty();
-        detail.ProjectCount.Should().Be(0);
+        team.Should().NotBeNull();
+        team.Name.Should().Be("My New Team");
+        team.Id.Should().NotBeNullOrEmpty();
+        team.ProjectCount.Should().Be(0);
     }
 
     [Fact]
@@ -183,12 +183,12 @@ public sealed class TeamsTests : IAsyncLifetime
     [InlineData(256)]
     public async Task CreateTeam_MinAndMaxLengthBoundaries_ReturnsCreatedTeam(int length)
     {
-        var detail = await _teams.TeamsPostAsync(new Team(null, new string('A', length), null, null), TestContext.Current.CancellationToken);
+        var team = await _teams.TeamsPostAsync(new Team(null, new string('A', length), null, null), TestContext.Current.CancellationToken);
 
-        detail.Should().NotBeNull();
-        detail.Name.Should().Be(new string('A', length));
-        detail.Id.Should().NotBeNullOrEmpty();
-        detail.ProjectCount.Should().Be(0);
+        team.Should().NotBeNull();
+        team.Name.Should().Be(new string('A', length));
+        team.Id.Should().NotBeNullOrEmpty();
+        team.ProjectCount.Should().Be(0);
     }
 
     [Fact]

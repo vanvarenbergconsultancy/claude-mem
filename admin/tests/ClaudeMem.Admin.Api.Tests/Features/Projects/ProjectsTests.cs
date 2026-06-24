@@ -128,12 +128,12 @@ public sealed class ProjectsTests : IAsyncLifetime
         await _db.InsertApiKeyAsync(teamId, projectId);
         await _db.InsertObservationAsync(teamId, projectId);
 
-        var detail = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
+        var project = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
 
-        detail.Id.Should().Be(projectId);
-        detail.Name.Should().Be("Detailed Project");
-        detail.ApiKeyCount.Should().Be(1);
-        detail.ObservationCount.Should().Be(1);
+        project.Id.Should().Be(projectId);
+        project.Name.Should().Be("Detailed Project");
+        project.ApiKeyCount.Should().Be(1);
+        project.ObservationCount.Should().Be(1);
     }
 
     [Fact]
