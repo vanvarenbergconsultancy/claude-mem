@@ -9,23 +9,6 @@ using Npgsql;
 
 namespace ClaudeMem.Admin.Api.Features.ApiKeys;
 
-internal sealed record GetApiKeysFilter(
-    string? ProjectId = null,
-    string? Cursor = null,
-    int? PageSize = null) : ICursorFilter;
-
-internal sealed record ApiKeyInsertResult(string Id, string ActorId, DateTimeOffset CreatedAt);
-
-internal sealed record ApiKeyLookup(string Id, string TeamId, string ProjectId);
-
-internal interface IApiKeyAccess
-{
-    Task<CursorPageResult<ApiKey>> GetApiKeys(GetApiKeysFilter filter, CancellationToken cancellationToken);
-    Task<ApiKeyInsertResult> InsertApiKey(string teamId, string projectId, string actorId, string keyHash, CancellationToken cancellationToken);
-    Task<ApiKeyLookup?> GetApiKey(string keyId, CancellationToken cancellationToken);
-    Task RevokeApiKeyById(string keyId, CancellationToken cancellationToken);
-}
-
 internal sealed class ApiKeyAccess : IApiKeyAccess
 {
     private readonly NpgsqlDataSource _db;

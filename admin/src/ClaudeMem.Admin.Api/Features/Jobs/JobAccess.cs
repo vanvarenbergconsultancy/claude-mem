@@ -9,19 +9,6 @@ using Npgsql;
 
 namespace ClaudeMem.Admin.Api.Features.Jobs;
 
-internal sealed record GetJobsFilter(
-    string? Status = null,
-    string? ProjectId = null,
-    string? Cursor = null,
-    int? PageSize = null) : ICursorFilter;
-
-internal interface IJobAccess
-{
-    Task<CursorPageResult<Job>> GetJobs(GetJobsFilter filter, CancellationToken cancellationToken);
-    Task<string?> GetJobStatus(string jobId, CancellationToken cancellationToken);
-    Task ResetJobToQueued(string jobId, CancellationToken cancellationToken);
-}
-
 internal sealed class JobAccess : IJobAccess
 {
     private readonly NpgsqlDataSource _db;

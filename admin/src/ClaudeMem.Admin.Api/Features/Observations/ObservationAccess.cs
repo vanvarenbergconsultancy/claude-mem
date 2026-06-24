@@ -9,18 +9,6 @@ using Npgsql;
 
 namespace ClaudeMem.Admin.Api.Features.Observations;
 
-internal sealed record GetObservationsFilter(
-    string? TeamId = null,
-    string? ProjectId = null,
-    string? SearchText = null,
-    string? Cursor = null,
-    int? PageSize = null) : ICursorFilter;
-
-internal interface IObservationAccess
-{
-    Task<CursorPageResult<Observation>> GetObservations(GetObservationsFilter filter, CancellationToken cancellationToken);
-}
-
 internal sealed class ObservationAccess : IObservationAccess
 {
     private readonly NpgsqlDataSource _db;

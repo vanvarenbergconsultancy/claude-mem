@@ -9,18 +9,6 @@ using Npgsql;
 
 namespace ClaudeMem.Admin.Api.Features.Teams;
 
-internal sealed record GetTeamsFilter(
-    string? Cursor = null,
-    int? PageSize = null) : ICursorFilter;
-
-internal interface ITeamAccess
-{
-    Task<bool> TeamExists(string teamId, CancellationToken cancellationToken);
-    Task<CursorPageResult<Team>> GetTeams(GetTeamsFilter filter, CancellationToken cancellationToken);
-    Task<Team?> GetTeamById(string teamId, CancellationToken cancellationToken);
-    Task<Team> CreateTeam(string name, CancellationToken cancellationToken);
-}
-
 internal sealed class TeamAccess : ITeamAccess
 {
     private readonly NpgsqlDataSource _db;
