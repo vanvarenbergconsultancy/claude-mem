@@ -55,7 +55,7 @@ internal sealed class ApiExceptionAssertions
 
         _chain
             .BecauseOf(because, becauseArgs)
-            .ForCondition(actualCode == errorCode)
+            .ForCondition(string.Equals(actualCode, errorCode, StringComparison.Ordinal))
             .FailWith(
                 "Expected {context:ApiException} to have error code {0}{reason}, but found {1}.",
                 errorCode,

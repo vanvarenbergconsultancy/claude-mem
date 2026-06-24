@@ -61,7 +61,7 @@ internal static class ResponsePageAssertions
         foreach (var segment in querySegments)
         {
             var idx = segment.IndexOf('=');
-            if (idx > 0 && segment[..idx] == "cursor")
+            if (idx > 0 && string.Equals(segment[..idx], "cursor", StringComparison.Ordinal))
             {
                 return Uri.UnescapeDataString(segment[(idx + 1)..]);
             }
