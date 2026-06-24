@@ -11,6 +11,9 @@ namespace ClaudeMem.Admin.Api.Tests.Features.Jobs;
 [Collection<AdminApiCollection>]
 public sealed class JobsTests : IAsyncLifetime
 {
+    private const string EndpointJobs = "/jobs";
+    private static string EndpointJobRetry(string id) => $"/jobs/{id}/retry";
+
     private readonly AdminApiFixture _fixture;
     private readonly DbHelper _db;
     private readonly IJobsClient _jobs;
@@ -124,7 +127,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync("/jobs", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticatedAsync(EndpointJobs, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -133,7 +136,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync("/jobs", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKeyAsync(EndpointJobs, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -178,7 +181,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.PostUnauthenticatedAsync("/jobs/some-id/retry", new { }, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticatedAsync(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -187,7 +190,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.PostWithWrongKeyAsync("/jobs/some-id/retry", new { }, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKeyAsync(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

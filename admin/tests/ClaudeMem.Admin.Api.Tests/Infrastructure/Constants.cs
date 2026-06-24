@@ -1,6 +1,6 @@
 ﻿namespace ClaudeMem.Admin.Api.Tests.Infrastructure
 {
-    internal class Constants
+    internal sealed class Constants
     {
         public static class ProblemTypes
         {

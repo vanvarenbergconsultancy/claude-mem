@@ -11,6 +11,9 @@ namespace ClaudeMem.Admin.Api.Tests.Features.Projects;
 [Collection<AdminApiCollection>]
 public sealed class ProjectsTests : IAsyncLifetime
 {
+    private static string EndpointProjectsByTeam(string teamId) => $"/teams/{teamId}/projects";
+    private static string EndpointProjectById(string teamId, string projectId) => $"/teams/{teamId}/projects/{projectId}";
+
     private readonly AdminApiFixture _fixture;
     private readonly DbHelper _db;
     private readonly IProjectsClient _projects;
@@ -105,7 +108,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync("/teams/some-team/projects", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticatedAsync(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -114,7 +117,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync("/teams/some-team/projects", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKeyAsync(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -153,7 +156,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjectById_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync("/teams/some-team/projects/some-id", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticatedAsync(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -162,7 +165,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjectById_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync("/teams/some-team/projects/some-id", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKeyAsync(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -236,7 +239,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     public async Task CreateProject_WithoutApiKey_Returns401()
     {
         var project = new Project(null, null, "Test Project", null, null, null);
-        var response = await _fixture.PostUnauthenticatedAsync("/teams/some-team/projects", project, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticatedAsync(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -246,7 +249,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     public async Task CreateProject_WithWrongApiKey_Returns401()
     {
         var project = new Project(null, null, "Test Project", null, null, null);
-        var response = await _fixture.PostWithWrongKeyAsync("/teams/some-team/projects", project, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKeyAsync(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

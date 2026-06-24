@@ -12,6 +12,8 @@ namespace ClaudeMem.Admin.Api.Tests.Features.Observations;
 [Collection<AdminApiCollection>]
 public sealed class ObservationsTests : IAsyncLifetime
 {
+    private static string EndpointObservationsByProject(string teamId, string projectId) => $"/teams/{teamId}/projects/{projectId}/observations";
+
     private readonly AdminApiFixture _fixture;
     private readonly DbHelper _db;
     private readonly IObservationsClient _observations;
@@ -152,7 +154,7 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync("/teams/some-team/projects/some-project/observations", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticatedAsync(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -161,7 +163,7 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync("/teams/some-team/projects/some-project/observations", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKeyAsync(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

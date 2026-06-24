@@ -12,6 +12,9 @@ namespace ClaudeMem.Admin.Api.Tests.Features.ApiKeys;
 [Collection<AdminApiCollection>]
 public sealed class ApiKeysTests : IAsyncLifetime
 {
+    private static string EndpointApiKeysByProject(string teamId, string projectId) => $"/teams/{teamId}/projects/{projectId}/api-keys";
+    private static string EndpointApiKeyById(string teamId, string projectId, string keyId) => $"/teams/{teamId}/projects/{projectId}/api-keys/{keyId}";
+
     private readonly AdminApiFixture _fixture;
     private readonly DbHelper _db;
     private readonly IApiKeysClient _apiKeys;
@@ -141,7 +144,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync("/teams/some-team/projects/some-project/api-keys", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticatedAsync(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -150,7 +153,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync("/teams/some-team/projects/some-project/api-keys", TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKeyAsync(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -242,7 +245,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     public async Task CreateApiKey_WithoutApiKey_Returns401()
     {
         var apiKey = new ApiKey(null, null, "test-actor", null, null);
-        var response = await _fixture.PostUnauthenticatedAsync("/teams/some-team/projects/some-project/api-keys", apiKey, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticatedAsync(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -252,7 +255,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     public async Task CreateApiKey_WithWrongApiKey_Returns401()
     {
         var apiKey = new ApiKey(null, null, "test-actor", null, null);
-        var response = await _fixture.PostWithWrongKeyAsync("/teams/some-team/projects/some-project/api-keys", apiKey, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKeyAsync(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -301,7 +304,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.DeleteUnauthenticatedAsync("/teams/some-team/projects/some-project/api-keys/some-key", TestContext.Current.CancellationToken);
+        var response = await _fixture.DeleteUnauthenticatedAsync(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -310,7 +313,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.DeleteWithWrongKeyAsync("/teams/some-team/projects/some-project/api-keys/some-key", TestContext.Current.CancellationToken);
+        var response = await _fixture.DeleteWithWrongKeyAsync(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
