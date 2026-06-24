@@ -34,7 +34,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     {
         var act = async () => await _projects.ProjectsGetAsync("no-such-team", cancellationToken: TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/team-not-found");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.TeamNotFound);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class ProjectsTests : IAsyncLifetime
 
         var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
         exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
-        exception.Which.Result.Type.Should().Be("/problems/project-team-mismatch");
+        exception.Which.Result.Type.Should().Be(Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed class ProjectsTests : IAsyncLifetime
 
         var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
         exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
-        exception.Which.Result.Type.Should().Be("/problems/team-not-found");
+        exception.Which.Result.Type.Should().Be(Constants.ProblemTypes.TeamNotFound);
     }
 
     [Fact]

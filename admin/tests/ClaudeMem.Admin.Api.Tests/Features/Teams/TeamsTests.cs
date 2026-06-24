@@ -126,7 +126,7 @@ public sealed class TeamsTests : IAsyncLifetime
 
         var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
         exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
-        exception.Which.Result.Type.Should().Be("/problems/team-not-found");
+        exception.Which.Result.Type.Should().Be(Constants.ProblemTypes.TeamNotFound);
     }
 
     [Fact]

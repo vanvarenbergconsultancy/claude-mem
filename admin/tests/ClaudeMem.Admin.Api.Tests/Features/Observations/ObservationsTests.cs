@@ -37,7 +37,7 @@ public sealed class ObservationsTests : IAsyncLifetime
 
         var act = async () => await _observations.ObservationsAsync(teamId, "no-project", cancellationToken: TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class ObservationsTests : IAsyncLifetime
 
         var act = async () => await _observations.ObservationsAsync(team2, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]

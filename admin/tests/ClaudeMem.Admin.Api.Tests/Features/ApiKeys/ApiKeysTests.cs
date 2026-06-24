@@ -37,7 +37,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysGetAsync(teamId, "no-such-project", cancellationToken: TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysGetAsync(team2, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "orphan-key", null, null), teamId, "no-such-project", TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/project-team-mismatch");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ProjectTeamMismatch);
     }
 
     [Fact]
@@ -281,7 +281,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysDeleteAsync(teamId, projectId, keyId, TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/api-key-not-found");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ApiKeyNotFound);
     }
 
     [Fact]
@@ -295,7 +295,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         var act = async () => await _apiKeys.ApiKeysDeleteAsync(team2, project2, keyId, TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, "/problems/api-key-not-found");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.NotFound, Constants.ProblemTypes.ApiKeyNotFound);
     }
 
     [Fact]

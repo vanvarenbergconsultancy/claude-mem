@@ -160,7 +160,7 @@ public sealed class JobsTests : IAsyncLifetime
 
         var exception = await act.Should().ThrowAsync<ApiException<ProblemDetails>>();
         exception.Which.Should().HaveStatusCode(HttpStatusCode.NotFound);
-        exception.Which.Result.Type.Should().Be("/problems/job-not-found");
+        exception.Which.Result.Type.Should().Be(Constants.ProblemTypes.JobNotFound);
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public sealed class JobsTests : IAsyncLifetime
 
         var act = async () => await _jobs.RetryAsync(jobId, TestContext.Current.CancellationToken);
 
-        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.Conflict, "/problems/job-not-in-failed-state");
+        await act.Should().ThrowProblemDetailsAsync(HttpStatusCode.Conflict, Constants.ProblemTypes.JobNotInFailedState);
     }
 
     [Fact]
