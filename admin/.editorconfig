@@ -65,11 +65,11 @@ dotnet_diagnostic.FAA0002.severity = error
 # - xUnit1004-xUnit1043: Various test method and theory data validation rules
 dotnet_analyzer_diagnostic.category-xUnit.severity = warning
 
-# "Microsoft.VisualStudio.Threading.Analyzers rules
-# VSTHRD111: Enable "Avoid legacy thread blocking calls" (we want to avoid blocking calls)
-dotnet_diagnostic.VSTHRD111.severity = warning
+# Microsoft.VisualStudio.Threading.Analyzers rules
+# VSTHRD111: Duplicate of MA0004 — suppressed globally; MA0004 is the one rule for ConfigureAwait
+dotnet_diagnostic.VSTHRD111.severity = none
 
-# VSTHRD200: Disable "Use 'Async' suffix in names of methods that return an awaitable type (This is so old school)"
+# VSTHRD200: Disable "Use 'Async' suffix in names of methods that return an awaitable type"
 dotnet_diagnostic.VSTHRD200.severity = none
 
 # Text.Analyzers rules
@@ -90,6 +90,10 @@ dotnet_diagnostic.S2699.severity = none
 dotnet_diagnostic.IDE0305.severity = warning
 
 # Meziantou.Analyzer Rules
+# MA0004: ConfigureAwait(false) — disabled globally; only enabled in library projects (see per-project .editorconfig)
+# API and Blazor code does not need it. Library code (Contracts) uses a project-level override.
+dotnet_diagnostic.MA0004.severity = none
+
 # MA0007: Add a comma after the last value
 dotnet_diagnostic.MA0007.severity = none
 

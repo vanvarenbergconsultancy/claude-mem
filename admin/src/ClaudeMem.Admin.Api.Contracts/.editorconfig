@@ -1,0 +1,4 @@
+[*.cs]
+# Library code — consumers are unknown, so ConfigureAwait(false) is required on all awaits.
+# This re-enables MA0004 which is suppressed globally for application projects.
+dotnet_diagnostic.MA0004.severity = warning
