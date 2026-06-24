@@ -14,7 +14,7 @@ public interface ITypesInclusionFactory
         var uniqueNamespacesOfIncludedTypesAndExtraNamespaces = GetIncludedTypeNamespaces()
             .Concat(additionalNamespaces)
             .Where(ns => !string.IsNullOrWhiteSpace(ns))
-            .Distinct()
+            .Distinct(StringComparer.Ordinal)
             .ToList();
 
         return uniqueNamespacesOfIncludedTypesAndExtraNamespaces;

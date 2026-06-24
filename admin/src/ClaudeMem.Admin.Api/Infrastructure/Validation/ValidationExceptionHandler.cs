@@ -26,7 +26,7 @@ internal sealed class ValidationExceptionHandler : IExceptionHandler
         }
 
         var groupedErrorsByPropertyName = validationException.Errors
-            .GroupBy(failure => failure.PropertyName)
+            .GroupBy(failure => failure.PropertyName, StringComparer.Ordinal)
             .ToDictionary(
                 group => group.Key,
                 group => group.Select(failure => failure.ErrorMessage).ToArray());

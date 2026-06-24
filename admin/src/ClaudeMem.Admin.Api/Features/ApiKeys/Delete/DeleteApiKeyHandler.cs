@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ClaudeMem.Admin.Api.Features.Projects.Shared;
@@ -50,7 +51,7 @@ internal sealed class DeleteApiKeyHandler : ICommandHandler<DeleteApiKeyCommand,
 
     private static ErrorCode? GetMismatchError(DeleteApiKeyCommand command, ApiKeyLookup existingApiKey)
     {
-        if (existingApiKey.TeamId != command.TeamId || existingApiKey.ProjectId != command.ProjectId)
+        if (!string.Equals(existingApiKey.TeamId, command.TeamId, StringComparison.Ordinal) || !string.Equals(existingApiKey.ProjectId, command.ProjectId, StringComparison.Ordinal))
         {
             return ResultErrorCodes.ApiKeyNotFound;
         }
