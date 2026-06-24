@@ -6,13 +6,13 @@ public class TypesInclusionFactory : ITypesInclusionFactory
 {
     public static readonly string ContractsNamespace = "ClaudeMem.Admin.Api.Contracts";
 
-    protected static readonly List<string> ExcludedTypeNames =
+    protected static readonly IReadOnlyList<string> ExcludedTypeNames =
     [
         "Microsoft.AspNetCore.Mvc.ProblemDetails",
         "ProblemDetails"
     ];
 
-    protected static readonly List<string> IncludedTypeNamespaces =
+    protected static readonly IReadOnlyList<string> IncludedTypeNamespaces =
     [
         "System",
         "System.Collections.Generic",
@@ -23,7 +23,7 @@ public class TypesInclusionFactory : ITypesInclusionFactory
         ContractsNamespace
     ];
 
-    public virtual IList<string> GetExcludedTypeNames() => ExcludedTypeNames;
+    public virtual IReadOnlyList<string> GetExcludedTypeNames() => ExcludedTypeNames;
 
-    public virtual IList<string> GetIncludedTypeNamespaces() => IncludedTypeNamespaces;
+    public virtual IReadOnlyList<string> GetIncludedTypeNamespaces() => IncludedTypeNamespaces;
 }
