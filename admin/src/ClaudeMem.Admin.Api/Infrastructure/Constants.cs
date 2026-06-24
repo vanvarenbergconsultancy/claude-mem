@@ -4,10 +4,6 @@ namespace ClaudeMem.Admin.Api.Infrastructure
 {
     internal static class Constants
     {
-        public static class AppSettingKeys
-        {
-
-        }
         public static class StatusCodeConventions
         {
             public const int ValidationFailedStatusCode = StatusCodes.Status422UnprocessableEntity;
