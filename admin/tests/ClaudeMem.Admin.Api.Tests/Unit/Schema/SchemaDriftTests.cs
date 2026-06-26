@@ -43,8 +43,8 @@ public sealed class SchemaDriftTests
 
     private static string LoadEmbeddedSchema()
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        using var stream = assembly.GetManifestResourceStream("ClaudeMem.Admin.Api.Tests.Infrastructure.schema.sql")!;
+        var assembly = typeof(Program).Assembly;
+        using var stream = assembly.GetManifestResourceStream("ClaudeMem.Admin.Api.Infrastructure.Database.schema.sql")!;
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
