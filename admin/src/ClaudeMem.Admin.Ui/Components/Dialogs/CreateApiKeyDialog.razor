@@ -22,7 +22,7 @@
         }
         else
         {
-            <MudAlert Severity="Severity.Warning" Class="mb-3">Copy this key now — it will not be shown again.</MudAlert>
+            <MudAlert Severity="Severity.Warning" Class="mb-3">Key copied to your clipboard — save it now, it will not be shown again.</MudAlert>
             <MudTextField Value="@_createdApiKey.Key" Label="API Key" Variant="Variant.Outlined"
                           ReadOnly="true" Adornment="Adornment.End"
                           AdornmentIcon="@Icons.Material.Filled.ContentCopy" OnAdornmentClick="OnCopyKeyButtonClicked" AdornmentAriaLabel="Copy key" />
@@ -52,6 +52,29 @@
     private string? _generalError;
     private bool _busy;
     private NewApiKey? _createdApiKey;
+    private bool _autoCopied;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_createdApiKey is not null && !_autoCopied)
+        {
+            _autoCopied = true;
+            await AutoCopyKeyAsync();
+        }
+    }
+
+    private async Task AutoCopyKeyAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _createdApiKey!.Key);
+            Snackbar.Add("Key copied to clipboard.", Severity.Info);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Could not auto-copy — please use the copy button.", Severity.Warning);
+        }
+    }
 
     private async Task OnCreateApiKeyButtonClicked()
     {
