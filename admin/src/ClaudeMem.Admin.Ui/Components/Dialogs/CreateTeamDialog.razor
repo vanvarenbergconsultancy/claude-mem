@@ -1,12 +1,12 @@
 @inject ITeamsClient TeamsClient
 
-<CreateEntityDialog
+<CreateEntityDialog TResult="Team"
     DialogTitle="New Team"
     FieldLabel="Team name"
     OnSubmitAsync="OnCreateTeamButtonClicked" />
 
 @code {
-    private async Task<object?> OnCreateTeamButtonClicked(string teamName)
+    private async Task<Team> OnCreateTeamButtonClicked(string teamName)
     {
         var team = new Team(null, teamName, null, null);
         

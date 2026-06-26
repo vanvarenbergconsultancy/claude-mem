@@ -1,4 +1,5 @@
-@inject ILogger<CreateEntityDialog> Logger
+@typeparam TResult where TResult : class
+@inject ILogger<CreateEntityDialog<TResult>> Logger
 
 <MudDialog>
     <TitleContent>
@@ -28,7 +29,7 @@
     [Parameter] public string FieldLabel { get; set; } = string.Empty;
     [Parameter] public string ValidationPropertyName { get; set; } = "Name";
     [Parameter] public int MaxLength { get; set; } = 256;
-    [Parameter] public Func<string, Task<object?>>? OnSubmitAsync { get; set; }
+    [Parameter] public Func<string, Task<TResult>>? OnSubmitAsync { get; set; }
 
     private string _entityName = string.Empty;
     private ServerValidationErrors _serverErrors = ServerValidationErrors.Empty;
@@ -51,7 +52,7 @@
         _generalError = null;
         try
         {
-            object? createdEntity = null;
+            TResult? createdEntity = default;
             if (OnSubmitAsync is not null)
             {
                 createdEntity = await OnSubmitAsync(_entityName.Trim());

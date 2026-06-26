@@ -1,6 +1,6 @@
 @inject IProjectsClient ProjectsClient
 
-<CreateEntityDialog
+<CreateEntityDialog TResult="Project"
     DialogTitle="New Project"
     FieldLabel="Project name"
     OnSubmitAsync="OnCreateProjectButtonClicked" />
@@ -8,7 +8,7 @@
 @code {
     [Parameter] public string TeamId { get; set; } = string.Empty;
 
-    private async Task<object?> OnCreateProjectButtonClicked(string projectName)
+    private async Task<Project> OnCreateProjectButtonClicked(string projectName)
     {
         return await ProjectsClient.ProjectsPostAsync(new Project(null, null, projectName, null, null, null), TeamId);
     }
