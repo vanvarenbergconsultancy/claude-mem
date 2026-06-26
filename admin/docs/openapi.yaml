@@ -440,6 +440,7 @@ components:
           readOnly: true
         project_count:
           type: integer
+          format: int64
           nullable: true
           readOnly: true
           description: Populated in detail view, null in list view.
@@ -477,11 +478,13 @@ components:
           readOnly: true
         api_key_count:
           type: integer
+          format: int64
           nullable: true
           readOnly: true
           description: Populated in detail view, null in list view.
         observation_count:
           type: integer
+          format: int64
           nullable: true
           readOnly: true
           description: Populated in detail view, null in list view.

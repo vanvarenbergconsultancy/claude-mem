@@ -2204,7 +2204,7 @@ namespace ClaudeMem.Admin.Api.Contracts
         /// <param name="createdAt"></param>
         /// <param name="projectCount">Populated in detail view, null in list view.</param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public Team(string? @id, string @name, System.DateTimeOffset? @createdAt, int? @projectCount)
+        public Team(string? @id, string @name, System.DateTimeOffset? @createdAt, long? @projectCount)
         {
             this.Id = @id;
             this.Name = @name;
@@ -2227,7 +2227,7 @@ namespace ClaudeMem.Admin.Api.Contracts
         /// Populated in detail view, null in list view.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("project_count")]
-        public int? ProjectCount { get; init; }
+        public long? ProjectCount { get; init; }
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 
@@ -2272,7 +2272,7 @@ namespace ClaudeMem.Admin.Api.Contracts
         /// <param name="apiKeyCount">Populated in detail view, null in list view.</param>
         /// <param name="observationCount">Populated in detail view, null in list view.</param>
         [System.Text.Json.Serialization.JsonConstructor]
-        public Project(string? @id, string? @teamId, string @name, System.DateTimeOffset? @createdAt, int? @apiKeyCount, int? @observationCount)
+        public Project(string? @id, string? @teamId, string @name, System.DateTimeOffset? @createdAt, long? @apiKeyCount, long? @observationCount)
         {
             this.Id = @id;
             this.TeamId = @teamId;
@@ -2300,13 +2300,13 @@ namespace ClaudeMem.Admin.Api.Contracts
         /// Populated in detail view, null in list view.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("api_key_count")]
-        public int? ApiKeyCount { get; init; }
+        public long? ApiKeyCount { get; init; }
 
         /// <summary>
         /// Populated in detail view, null in list view.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("observation_count")]
-        public int? ObservationCount { get; init; }
+        public long? ObservationCount { get; init; }
 
         private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
 

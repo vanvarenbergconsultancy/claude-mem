@@ -40,30 +40,33 @@ internal sealed class ProjectAccess : IProjectAccess
 
         var builder = new SqlBuilder();
         var template = builder.AddTemplate("""
-            SELECT id, team_id, name, created_at
-            FROM projects
+            SELECT
+                p.id, p.team_id, p.name, p.created_at,
+                (SELECT COUNT(*) FROM api_keys WHERE project_id = p.id AND revoked_at IS NULL) AS api_key_count,
+                (SELECT COUNT(*) FROM observations WHERE project_id = p.id) AS observation_count
+            FROM projects p
             /**where**/
-            ORDER BY created_at DESC, id DESC
+            ORDER BY p.created_at DESC, p.id DESC
             LIMIT @FetchCount
             """, new { FetchCount = opts.FetchCount });
 
         if (filter.TeamId is not null)
         {
-            builder.Where("team_id = @TeamId", new { TeamId = filter.TeamId });
+            builder.Where("p.team_id = @TeamId", new { TeamId = filter.TeamId });
         }
 
         if (opts.DecodedCursor is { } cur)
         {
-            builder.Where("(created_at, id) < (@CursorCreatedAt, @CursorId)", new { CursorId = cur.Id, CursorCreatedAt = cur.CreatedAt });
+            builder.Where("(p.created_at, p.id) < (@CursorCreatedAt, @CursorId)", new { CursorId = cur.Id, CursorCreatedAt = cur.CreatedAt });
         }
 
         await using var connection = await _db.OpenConnectionAsync(cancellationToken);
-        var projectRows = (await connection.QueryAsync<ProjectRow>(template.RawSql, template.Parameters)).AsList();
+        var projectRows = (await connection.QueryAsync<ProjectDetailRow>(template.RawSql, template.Parameters)).AsList();
 
         var nextCursor = await opts.TrimAndGetNextCursor(projectRows, r => new CursorPayload(r.Id, r.CreatedAt), cancellationToken);
 
         var projects = projectRows
-            .Select(r => new Project(r.Id, r.TeamId, r.Name, r.CreatedAt, apiKeyCount: null, observationCount: null))
+            .Select(r => new Project(r.Id, r.TeamId, r.Name, r.CreatedAt, apiKeyCount: r.ApiKeyCount, observationCount: r.ObservationCount))
             .ToList();
 
         return new CursorPageResult<Project>(projects, filter.Cursor, nextCursor);
@@ -95,7 +98,7 @@ internal sealed class ProjectAccess : IProjectAccess
             return null;
         }
 
-        return new Project(row.Id, row.TeamId, row.Name, row.CreatedAt, apiKeyCount: (int)row.ApiKeyCount, observationCount: (int)row.ObservationCount);
+        return new Project(row.Id, row.TeamId, row.Name, row.CreatedAt, apiKeyCount: row.ApiKeyCount, observationCount: row.ObservationCount);
     }
 
     public async Task<Project> CreateProject(string teamId, string name, CancellationToken cancellationToken)

@@ -54,6 +54,30 @@ public sealed class TeamsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetTeams_ReturnsProjectCountPerTeam()
+    {
+        var teamAlphaId = await _db.InsertTeamAsync("Alpha");
+        var teamBetaId = await _db.InsertTeamAsync("Beta");
+        await _db.InsertProjectAsync(teamAlphaId, "Project A");
+        await _db.InsertProjectAsync(teamAlphaId, "Project B");
+        await _db.InsertProjectAsync(teamAlphaId, "Project C");
+
+        var page = await _teams.TeamsGetAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        page.ShouldHaveItems(page.Items, 2);
+
+        var alphaTeam = page.Items.Should().ContainSingle(t => t.Id == teamAlphaId).Subject;
+        alphaTeam.Name.Should().Be("Alpha");
+        alphaTeam.CreatedAt.Should().NotBeNull();
+        alphaTeam.ProjectCount.Should().Be(3);
+
+        var betaTeam = page.Items.Should().ContainSingle(t => t.Id == teamBetaId).Subject;
+        betaTeam.ProjectCount.Should().Be(0);
+        betaTeam.Name.Should().Be("Beta");
+        betaTeam.CreatedAt.Should().NotBeNull();
+    }
+
+    [Fact]
     public async Task GetTeams_MultiPagePagination_LinksCorrect()
     {
         for (var i = 0; i < 10; i++)

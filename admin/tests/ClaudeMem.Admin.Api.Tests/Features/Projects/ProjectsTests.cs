@@ -67,6 +67,51 @@ public sealed class ProjectsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetProjects_ReturnsCorrectCountsPerProject()
+    {
+        var teamId = await _db.InsertTeamAsync();
+
+        var projectWithNoKeysOrObservations = await _db.InsertProjectAsync(teamId, "Project A");
+        var projectWith2ActiveKeysAnd1Observation = await _db.InsertProjectAsync(teamId, "Project B");
+        var projectWith1ActiveKey1RevokedKeyAndNoObservation = await _db.InsertProjectAsync(teamId, "Project C");
+        var projectWithNoKeysAnd2Observations = await _db.InsertProjectAsync(teamId, "Project D");
+
+        await _db.InsertApiKeyAsync(teamId, projectWith2ActiveKeysAnd1Observation);
+        await _db.InsertApiKeyAsync(teamId, projectWith2ActiveKeysAnd1Observation);
+        await _db.InsertObservationAsync(teamId, projectWith2ActiveKeysAnd1Observation);
+
+        await _db.InsertApiKeyAsync(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
+        var revokedKey = await _db.InsertApiKeyAsync(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
+        await _db.RevokeApiKeyAsync(revokedKey);
+
+        await _db.InsertObservationAsync(teamId, projectWithNoKeysAnd2Observations);
+        await _db.InsertObservationAsync(teamId, projectWithNoKeysAnd2Observations);
+
+        var page = await _projects.ProjectsGetAsync(teamId, cancellationToken: TestContext.Current.CancellationToken);
+
+        page.ShouldHaveItems(page.Items, 4);
+
+        var projectA = page.Items.Should().ContainSingle(p => p.Id == projectWithNoKeysOrObservations).Subject;
+        projectA.ApiKeyCount.Should().Be(0);
+        projectA.ObservationCount.Should().Be(0);
+
+        var projectB = page.Items.Should().ContainSingle(p => p.Id == projectWith2ActiveKeysAnd1Observation).Subject;
+        projectB.TeamId.Should().Be(teamId);
+        projectB.Name.Should().Be("Project B");
+        projectB.CreatedAt.Should().NotBeNull();
+        projectB.ApiKeyCount.Should().Be(2);
+        projectB.ObservationCount.Should().Be(1);
+
+        var projectC = page.Items.Should().ContainSingle(p => p.Id == projectWith1ActiveKey1RevokedKeyAndNoObservation).Subject;
+        projectC.ApiKeyCount.Should().Be(1);
+        projectC.ObservationCount.Should().Be(0);
+
+        var projectD = page.Items.Should().ContainSingle(p => p.Id == projectWithNoKeysAnd2Observations).Subject;
+        projectD.ApiKeyCount.Should().Be(0);
+        projectD.ObservationCount.Should().Be(2);
+    }
+
+    [Fact]
     public async Task GetProjects_MultiPagePagination_LinksCorrect()
     {
         var teamId = await _db.InsertTeamAsync();

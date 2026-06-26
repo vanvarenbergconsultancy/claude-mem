@@ -35,25 +35,27 @@ internal sealed class TeamAccess : ITeamAccess
 
         var builder = new SqlBuilder();
         var template = builder.AddTemplate("""
-            SELECT id, name, created_at
-            FROM teams
+            SELECT
+                t.id, t.name, t.created_at,
+                (SELECT COUNT(*) FROM projects WHERE team_id = t.id) AS project_count
+            FROM teams t
             /**where**/
-            ORDER BY created_at DESC, id DESC
+            ORDER BY t.created_at DESC, t.id DESC
             LIMIT @FetchCount
             """, new { FetchCount = opts.FetchCount });
 
         if (opts.DecodedCursor is { } cur)
         {
-            builder.Where("(created_at, id) < (@CursorCreatedAt, @CursorId)", new { CursorId = cur.Id, CursorCreatedAt = cur.CreatedAt });
+            builder.Where("(t.created_at, t.id) < (@CursorCreatedAt, @CursorId)", new { CursorId = cur.Id, CursorCreatedAt = cur.CreatedAt });
         }
 
         await using var connection = await _db.OpenConnectionAsync(cancellationToken);
-        var teamRows = (await connection.QueryAsync<TeamRow>(template.RawSql, template.Parameters)).AsList();
+        var teamRows = (await connection.QueryAsync<TeamDetailRow>(template.RawSql, template.Parameters)).AsList();
 
         var nextCursor = await opts.TrimAndGetNextCursor(teamRows, r => new CursorPayload(r.Id, r.CreatedAt), cancellationToken);
 
         var teams = teamRows
-            .Select(r => new Team(r.Id, r.Name, r.CreatedAt, projectCount: null))
+            .Select(r => new Team(r.Id, r.Name, r.CreatedAt, projectCount: r.ProjectCount))
             .ToList();
 
         return new CursorPageResult<Team>(teams, filter.Cursor, nextCursor);
@@ -81,7 +83,7 @@ internal sealed class TeamAccess : ITeamAccess
             return null;
         }
 
-        return new Team(row.Id, row.Name, row.CreatedAt, projectCount: (int)row.ProjectCount);
+        return new Team(row.Id, row.Name, row.CreatedAt, projectCount: row.ProjectCount);
     }
 
     public async Task<Team> CreateTeam(string name, CancellationToken cancellationToken)
