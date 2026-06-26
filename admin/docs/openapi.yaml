@@ -386,6 +386,70 @@ paths:
         default:
           $ref: '#/components/responses/ProblemDetailsError'
 
+  # ── Audit Log ──────────────────────────────────────────────────────────────
+  /audit-log:
+    get:
+      operationId: GetAuditLog
+      summary: List audit log entries (cursor-paginated)
+      tags: [AuditLog]
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: team_id
+          in: query
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          schema:
+            type: string
+        - name: api_key_id
+          in: query
+          schema:
+            type: string
+        - name: actor_id
+          in: query
+          schema:
+            type: string
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+        '401':
+          description: Missing or invalid API key
+        default:
+          $ref: '#/components/responses/ProblemDetailsError'
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -622,6 +686,69 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Job'
+          required: [items]
+
+    # ── Audit Log ─────────────────────────────────────────────────────────────
+    AuditLogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        team_id:
+          type: string
+          nullable: true
+          readOnly: true
+        team_name:
+          type: string
+          nullable: true
+          readOnly: true
+        project_id:
+          type: string
+          nullable: true
+          readOnly: true
+        project_name:
+          type: string
+          nullable: true
+          readOnly: true
+        actor_id:
+          type: string
+          nullable: true
+          readOnly: true
+        api_key_id:
+          type: string
+          nullable: true
+          readOnly: true
+        action:
+          type: string
+          readOnly: true
+        resource_type:
+          type: string
+          readOnly: true
+        resource_id:
+          type: string
+          nullable: true
+          readOnly: true
+        details:
+          type: object
+          nullable: true
+          readOnly: true
+          additionalProperties: {}
+          description: Arbitrary JSON payload associated with this audit event.
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+
+    AuditLogPage:
+      allOf:
+        - $ref: '#/components/schemas/ResponsePage'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/AuditLogEntry'
           required: [items]
 
     # ── Problem Details ───────────────────────────────────────────────────────

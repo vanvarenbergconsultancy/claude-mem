@@ -2149,6 +2149,307 @@ namespace ClaudeMem.Admin.Api.Contracts
         }
     }
 
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial interface IAuditLogClient
+    {
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// List audit log entries (cursor-paginated)
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        System.Threading.Tasks.Task<AuditLogPage> AuditLogAsync(string? cursor = null, int? pageSize = null, string? teamId = null, string? projectId = null, string? apiKeyId = null, string? actorId = null, string? action = null, string? resourceType = null, System.DateTimeOffset? from = null, System.DateTimeOffset? to = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class AuditLogClient : IAuditLogClient
+    {
+        private System.Net.Http.HttpClient _httpClient;
+        private static System.Lazy<System.Text.Json.JsonSerializerOptions> _settings = new System.Lazy<System.Text.Json.JsonSerializerOptions>(CreateSerializerSettings, true);
+        private System.Text.Json.JsonSerializerOptions _instanceSettings;
+
+    #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public AuditLogClient(System.Net.Http.HttpClient httpClient)
+    #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        {
+            _httpClient = httpClient;
+            Initialize();
+        }
+
+        private static System.Text.Json.JsonSerializerOptions CreateSerializerSettings()
+        {
+            var settings = new System.Text.Json.JsonSerializerOptions();
+            UpdateJsonSerializerSettings(settings);
+            return settings;
+        }
+
+        protected System.Text.Json.JsonSerializerOptions JsonSerializerSettings { get { return _instanceSettings ?? _settings.Value; } }
+
+        static partial void UpdateJsonSerializerSettings(System.Text.Json.JsonSerializerOptions settings);
+
+        partial void Initialize();
+
+        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url);
+        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
+        partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// List audit log entries (cursor-paginated)
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<AuditLogPage> AuditLogAsync(string? cursor = null, int? pageSize = null, string? teamId = null, string? projectId = null, string? apiKeyId = null, string? actorId = null, string? action = null, string? resourceType = null, System.DateTimeOffset? from = null, System.DateTimeOffset? to = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                
+                    // Operation Path: "audit-log"
+                    urlBuilder_.Append("audit-log");
+                    urlBuilder_.Append('?');
+                    if (cursor != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("cursor")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(cursor, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (pageSize != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("page_size")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(pageSize, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (teamId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("team_id")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(teamId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (projectId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("project_id")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(projectId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (apiKeyId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("api_key_id")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(apiKeyId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (actorId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("actor_id")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(actorId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (action != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("action")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(action, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (resourceType != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("resource_type")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(resourceType, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (from != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("from")).Append('=').Append(System.Uri.EscapeDataString(from.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (to != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("to")).Append('=').Append(System.Uri.EscapeDataString(to.Value.ToString("s", System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    urlBuilder_.Length--;
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<AuditLogPage>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 401)
+                        {
+                            string responseText_ = ( response_.Content == null ) ? string.Empty : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("Missing or invalid API key", status_, responseText_, headers_, null);
+                        }
+                        else
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<ProblemDetails>("Error", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        protected struct ObjectResponseResult<T>
+        {
+            public ObjectResponseResult(T responseObject, string responseText)
+            {
+                this.Object = responseObject;
+                this.Text = responseText;
+            }
+
+            public T Object { get; }
+
+            public string Text { get; }
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static System.Threading.Tasks.Task<string> ReadAsStringAsync(System.Net.Http.HttpContent content, System.Threading.CancellationToken cancellationToken)
+        {
+    #if NET5_0_OR_GREATER
+            return content.ReadAsStringAsync(cancellationToken);
+    #else
+            return content.ReadAsStringAsync();
+    #endif
+        }
+
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        private static System.Threading.Tasks.Task<System.IO.Stream> ReadAsStreamAsync(System.Net.Http.HttpContent content, System.Threading.CancellationToken cancellationToken)
+        {
+    #if NET5_0_OR_GREATER
+            return content.ReadAsStreamAsync(cancellationToken);
+    #else
+            return content.ReadAsStreamAsync();
+    #endif
+        }
+
+        public bool ReadResponseAsString { get; set; }
+
+        protected virtual async System.Threading.Tasks.Task<ObjectResponseResult<T>> ReadObjectResponseAsync<T>(System.Net.Http.HttpResponseMessage response, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.Threading.CancellationToken cancellationToken)
+        {
+            if (response == null || response.Content == null)
+            {
+                return new ObjectResponseResult<T>(default(T)!, string.Empty);
+            }
+
+            if (ReadResponseAsString)
+            {
+                var responseText = await ReadAsStringAsync(response.Content, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    var typedBody = System.Text.Json.JsonSerializer.Deserialize<T>(responseText, JsonSerializerSettings);
+                    return new ObjectResponseResult<T>(typedBody!, responseText);
+                }
+                catch (System.Text.Json.JsonException exception)
+                {
+                    var message = "Could not deserialize the response body string as " + typeof(T).FullName + ".";
+                    throw new ApiException(message, (int)response.StatusCode, responseText, headers, exception);
+                }
+            }
+            else
+            {
+                try
+                {
+                    using (var responseStream = await ReadAsStreamAsync(response.Content, cancellationToken).ConfigureAwait(false))
+                    {
+                        var typedBody = await System.Text.Json.JsonSerializer.DeserializeAsync<T>(responseStream, JsonSerializerSettings, cancellationToken).ConfigureAwait(false);
+                        return new ObjectResponseResult<T>(typedBody!, string.Empty);
+                    }
+                }
+                catch (System.Text.Json.JsonException exception)
+                {
+                    var message = "Could not deserialize the response body stream as " + typeof(T).FullName + ".";
+                    throw new ApiException(message, (int)response.StatusCode, string.Empty, headers, exception);
+                }
+            }
+        }
+
+        private string ConvertToString(object? value, System.Globalization.CultureInfo cultureInfo)
+        {
+            if (value == null)
+            {
+                return "";
+            }
+
+            if (value is System.Enum)
+            {
+                var name = System.Enum.GetName(value.GetType(), value);
+                if (name != null)
+                {
+                    var field_ = System.Reflection.IntrospectionExtensions.GetTypeInfo(value.GetType()).GetDeclaredField(name);
+                    if (field_ != null)
+                    {
+                        var attribute = System.Reflection.CustomAttributeExtensions.GetCustomAttribute(field_, typeof(System.Runtime.Serialization.EnumMemberAttribute)) 
+                            as System.Runtime.Serialization.EnumMemberAttribute;
+                        if (attribute != null)
+                        {
+                            return attribute.Value != null ? attribute.Value : name;
+                        }
+                    }
+
+                    var converted = System.Convert.ToString(System.Convert.ChangeType(value, System.Enum.GetUnderlyingType(value.GetType()), cultureInfo));
+                    return converted == null ? string.Empty : converted;
+                }
+            }
+            else if (value is bool) 
+            {
+                return System.Convert.ToString((bool)value, cultureInfo).ToLowerInvariant();
+            }
+            else if (value is byte[])
+            {
+                return System.Convert.ToBase64String((byte[]) value);
+            }
+            else if (value is string[])
+            {
+                return string.Join(",", (string[])value);
+            }
+            else if (value.GetType().IsArray)
+            {
+                var valueArray = (System.Array)value;
+                var valueTextArray = new string[valueArray.Length];
+                for (var i = 0; i < valueArray.Length; i++)
+                {
+                    valueTextArray[i] = ConvertToString(valueArray.GetValue(i), cultureInfo);
+                }
+                return string.Join(",", valueTextArray);
+            }
+
+            var result = System.Convert.ToString(value, cultureInfo);
+            return result == null ? "" : result;
+        }
+    }
+
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial record ResponsePage
     {
@@ -2590,6 +2891,110 @@ namespace ClaudeMem.Admin.Api.Contracts
         [System.Text.Json.Serialization.JsonPropertyName("items")]
         [System.ComponentModel.DataAnnotations.Required]
         public IEnumerable<Job> Items { get; init; }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial record AuditLogEntry
+    {
+        /// <summary> Initializes a new instance of the <see cref="AuditLogEntry"/> class. </summary>
+        /// <param name="id"></param>
+        /// <param name="teamId"></param>
+        /// <param name="teamName"></param>
+        /// <param name="projectId"></param>
+        /// <param name="projectName"></param>
+        /// <param name="actorId"></param>
+        /// <param name="apiKeyId"></param>
+        /// <param name="action"></param>
+        /// <param name="resourceType"></param>
+        /// <param name="resourceId"></param>
+        /// <param name="details">Arbitrary JSON payload associated with this audit event.</param>
+        /// <param name="createdAt"></param>
+        [System.Text.Json.Serialization.JsonConstructor]
+        public AuditLogEntry(string? @id, string? @teamId, string? @teamName, string? @projectId, string? @projectName, string? @actorId, string? @apiKeyId, string? @action, string? @resourceType, string? @resourceId, System.Collections.Generic.IDictionary<string, object>? @details, System.DateTimeOffset? @createdAt)
+        {
+            this.Id = @id;
+            this.TeamId = @teamId;
+            this.TeamName = @teamName;
+            this.ProjectId = @projectId;
+            this.ProjectName = @projectName;
+            this.ActorId = @actorId;
+            this.ApiKeyId = @apiKeyId;
+            this.Action = @action;
+            this.ResourceType = @resourceType;
+            this.ResourceId = @resourceId;
+            this.Details = @details;
+            this.CreatedAt = @createdAt;
+        }
+
+        [System.Text.Json.Serialization.JsonPropertyName("id")]
+        public string? Id { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("team_id")]
+        public string? TeamId { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("team_name")]
+        public string? TeamName { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("project_id")]
+        public string? ProjectId { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("project_name")]
+        public string? ProjectName { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("actor_id")]
+        public string? ActorId { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("api_key_id")]
+        public string? ApiKeyId { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("action")]
+        public string? Action { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("resource_type")]
+        public string? ResourceType { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("resource_id")]
+        public string? ResourceId { get; init; }
+
+        /// <summary>
+        /// Arbitrary JSON payload associated with this audit event.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("details")]
+        public System.Collections.Generic.IDictionary<string, object>? Details { get; init; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("created_at")]
+        public System.DateTimeOffset? CreatedAt { get; init; }
+
+        private System.Collections.Generic.IDictionary<string, object>? _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial record AuditLogPage : ResponsePage
+    {
+        /// <summary> Initializes a new instance of the <see cref="AuditLogPage"/> class. </summary>
+        /// <param name="self">Link to the current page.</param>
+        /// <param name="first">Link to the first page.</param>
+        /// <param name="next">Link to the next page. Absent on the last page.</param>
+        /// <param name="items"></param>
+        [System.Text.Json.Serialization.JsonConstructor]
+        public AuditLogPage(System.Uri @self, System.Uri @first, System.Uri? @next, IEnumerable<AuditLogEntry> @items)
+            : base(self, first, next)
+        {
+            this.Items = @items;
+        }
+
+        [System.Text.Json.Serialization.JsonPropertyName("items")]
+        [System.ComponentModel.DataAnnotations.Required]
+        public IEnumerable<AuditLogEntry> Items { get; init; }
 
     }
 

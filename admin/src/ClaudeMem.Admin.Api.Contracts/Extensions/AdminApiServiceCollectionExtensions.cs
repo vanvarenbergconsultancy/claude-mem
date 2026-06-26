@@ -14,6 +14,7 @@ public static class AdminApiServiceCollectionExtensions
         services.AddHttpClient<IApiKeysClient, ApiKeysClient>(client => Configure(client, baseUrl, apiKey));
         services.AddHttpClient<IObservationsClient, ObservationsClient>(client => Configure(client, baseUrl, apiKey));
         services.AddHttpClient<IJobsClient, JobsClient>(client => Configure(client, baseUrl, apiKey));
+        services.AddHttpClient<IAuditLogClient, AuditLogClient>(client => Configure(client, baseUrl, apiKey));
 
         return services;
     }
