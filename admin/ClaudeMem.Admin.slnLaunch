@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "fullstack",
+    "Projects": [
+      {
+        "Path": "src\\ClaudeMem.Admin.Api\\ClaudeMem.Admin.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "src\\ClaudeMem.Admin.Ui\\ClaudeMem.Admin.Ui.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      }
+    ]
+  }
+]
