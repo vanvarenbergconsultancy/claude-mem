@@ -44,7 +44,14 @@ internal static class LocalContainerSetup
             throw new InvalidOperationException("Failed to start local PostgreSQL via Testcontainers. Docker must be running. On WSL2 without Docker Desktop, set DOCKER_HOST=tcp://127.0.0.1:2375 (not localhost).", ex);
         }
 
+        // Disable SSL — the dev container has no certificate; Npgsql 10 defaults to Prefer which fails.
         var connectionString = container.GetConnectionString();
+        var csb = new NpgsqlConnectionStringBuilder(connectionString)
+        {
+            SslMode = SslMode.Disable
+        };
+        
+        connectionString = csb.ConnectionString;
         await ApplySchema(connectionString, cancellationToken);
         await SeedIfEmpty(connectionString, cancellationToken);
 
