@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup Label="ASP.NET Core">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0" />
     <PackageVersion Include="MudBlazor" Version="9.5.0" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
@@ -53,7 +54,7 @@
     <PackageVersion Include="bunit" Version="2.7.2" />
   </ItemGroup>
   <ItemGroup Label="Logging">
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
   </ItemGroup>
   <ItemGroup Label="NSwag">
     <PackageVersion Include="NSwag.AspNetCore" Version="14.7.1" />
@@ -66,7 +67,7 @@
     <PackageVersion Include="System.CodeDom" Version="10.0.8" />
   </ItemGroup>
   <ItemGroup Label="Extensions">
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.8" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.9" />
   </ItemGroup>
 </Project>
