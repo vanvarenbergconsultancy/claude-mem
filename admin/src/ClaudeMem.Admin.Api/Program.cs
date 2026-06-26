@@ -161,6 +161,7 @@ public class Program
         services.AddScoped<Features.ApiKeys.IApiKeyAccess, Features.ApiKeys.ApiKeyAccess>();
         services.AddScoped<Features.Jobs.IJobAccess, Features.Jobs.JobAccess>();
         services.AddScoped<Features.Observations.IObservationAccess, Features.Observations.ObservationAccess>();
+        services.AddScoped<Features.AuditLog.IAuditLogAccess, Features.AuditLog.AuditLogAccess>();
     }
 
     private static void AddApiLayer(IServiceCollection services)
