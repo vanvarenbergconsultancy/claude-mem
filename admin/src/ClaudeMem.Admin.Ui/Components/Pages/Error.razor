@@ -1,0 +1,29 @@
+@page "/Error"
+@using System.Diagnostics
+@using Microsoft.AspNetCore.Http
+
+<PageTitle>Error — ClaudeMem Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Color="Color.Error" GutterBottom="true">An error occurred.</MudText>
+
+@if (ShowRequestId)
+{
+    <MudText Typo="Typo.body2">Request ID: <code>@RequestId</code></MudText>
+}
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+    private bool ShowRequestId
+    {
+        get { return !string.IsNullOrEmpty(RequestId); }
+    }
+
+    protected override void OnInitialized()
+    {
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+    }
+
+}

@@ -1,0 +1,16 @@
+@inject ILogger<ProcessError> Logger
+@inject ISnackbar Snackbar
+
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    public void HandleError(Exception ex, string? userMessage = null, Severity severity = Severity.Error)
+    {
+        Logger.LogError(ex, "Component operation failed");
+        Snackbar.Add(userMessage ?? ApiExceptionHelper.GetUserMessage(ex), severity);
+    }
+}

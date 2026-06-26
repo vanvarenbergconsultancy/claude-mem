@@ -1,0 +1,19 @@
+html, body {
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Scale down large headings on small screens */
+@media (max-width: 599px) {
+    .mud-typography-h4 {
+        font-size: 1.4rem;
+    }
+
+    .mud-typography-h5 {
+        font-size: 1.15rem;
+    }
+}
+
+/* Allow tables to scroll horizontally on very small screens when not yet in card mode */
+.mud-table-root {
+    overflow-x: auto;
+}

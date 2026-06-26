@@ -1,0 +1,21 @@
+@typeparam TData where TData : class
+
+@if (IsLoading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (Data is null)
+{
+    <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+}
+else
+{
+    @ChildContent(Data)
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public TData? Data { get; set; }
+    [Parameter] public string ErrorMessage { get; set; } = string.Empty;
+    [Parameter] public RenderFragment<TData> ChildContent { get; set; } = default!;
+}

@@ -1,0 +1,81 @@
+@page "/dev/validation"
+
+<PageTitle>Validation Test — ClaudeMem Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Server Validation Error Display Test</MudText>
+<MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">
+    This page is for development testing only. It is not linked from the nav.
+    Click "Submit" to simulate a 422 response with errors on both fields.
+</MudText>
+
+<MudPaper Class="pa-4" Style="max-width:480px" Elevation="1">
+    <MudStack Spacing="3">
+        <MudTextField @bind-Value="_name" Label="Name" Variant="Variant.Outlined"
+                      Error="@_serverErrors.HasError("Name")"
+                      ErrorText="@_serverErrors.GetErrorText("Name")" />
+
+        <MudTextField @bind-Value="_description" Label="Description" Variant="Variant.Outlined"
+                      Error="@_serverErrors.HasError("Description")"
+                      ErrorText="@_serverErrors.GetErrorText("Description")" />
+
+        @if (_generalError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">@_generalError</MudAlert>
+        }
+
+        <MudStack Row="true" Spacing="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSimulateValidationClicked">
+                Simulate 422 validation
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="OnSimulateAuthClicked">
+                Simulate 401 auth error
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="OnSimulateNetworkClicked">
+                Simulate network error
+            </MudButton>
+            <MudButton Variant="Variant.Text" OnClick="OnClearClicked">Clear</MudButton>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private string _name = string.Empty;
+    private string _description = string.Empty;
+    private ServerValidationErrors _serverErrors = ServerValidationErrors.Empty;
+    private string? _generalError;
+
+    private void OnSimulateValidationClicked()
+    {
+        var errors = new Dictionary<string, IEnumerable<string>>
+        {
+            { "Name", ["Name must be at least 4 characters.", "Name must not contain special characters."] },
+            { "Description", ["Description is too long."] }
+        };
+
+        var vpd = new ValidationProblemDetails(null, "Validation failed", 422, null, null, errors);
+        var ex = new ApiException<ValidationProblemDetails>("Error", 422, null, new Dictionary<string, IEnumerable<string>>(), vpd, null);
+
+        _serverErrors = ServerValidationErrors.FromException(ex);
+        _generalError = _serverErrors.HasAny ? null : ApiExceptionHelper.GetUserMessage(ex);
+    }
+
+    private void OnSimulateAuthClicked()
+    {
+        var ex = new ApiException("Missing or invalid API key", 401, null, new Dictionary<string, IEnumerable<string>>(), null);
+        _serverErrors = ServerValidationErrors.FromException(ex);
+        _generalError = _serverErrors.HasAny ? null : ApiExceptionHelper.GetUserMessage(ex);
+    }
+
+    private void OnSimulateNetworkClicked()
+    {
+        var ex = new HttpRequestException("Connection refused");
+        _serverErrors = ServerValidationErrors.FromException(ex);
+        _generalError = _serverErrors.HasAny ? null : ApiExceptionHelper.GetUserMessage(ex);
+    }
+
+    private void OnClearClicked()
+    {
+        _serverErrors = ServerValidationErrors.Empty;
+        _generalError = null;
+    }
+}
