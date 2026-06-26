@@ -1,0 +1,78 @@
+@inject ILogger<CreateEntityDialog> Logger
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@DialogTitle</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_entityName" Label="@FieldLabel" Variant="Variant.Outlined"
+                      Immediate="true" AutoFocus="true" MaxLength="@MaxLength"
+                      Error="@_serverErrors.HasError(ValidationPropertyName)"
+                      ErrorText="@_serverErrors.GetErrorText(ValidationPropertyName)" />
+        @if (_generalError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_generalError</MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="OnCancelButtonClicked">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="OnCreateButtonClicked" Disabled="_busy">Create</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter] public string DialogTitle { get; set; } = string.Empty;
+    [Parameter] public string FieldLabel { get; set; } = string.Empty;
+    [Parameter] public string ValidationPropertyName { get; set; } = "Name";
+    [Parameter] public int MaxLength { get; set; } = 256;
+    [Parameter] public Func<string, Task<object?>>? OnSubmitAsync { get; set; }
+
+    private string _entityName = string.Empty;
+    private ServerValidationErrors _serverErrors = ServerValidationErrors.Empty;
+    private string? _generalError;
+    private bool _busy;
+
+    private async Task OnCreateButtonClicked()
+    {
+        if (string.IsNullOrWhiteSpace(_entityName))
+        {
+            _serverErrors = new ServerValidationErrors(new Dictionary<string, IEnumerable<string>>
+            {
+                { ValidationPropertyName, ["Name is required."] }
+            });
+            return;
+        }
+
+        _busy = true;
+        _serverErrors = ServerValidationErrors.Empty;
+        _generalError = null;
+        try
+        {
+            object? createdEntity = null;
+            if (OnSubmitAsync is not null)
+            {
+                createdEntity = await OnSubmitAsync(_entityName.Trim());
+            }
+
+            MudDialog?.Close(DialogResult.Ok(createdEntity));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create {FieldLabel}", FieldLabel);
+            _serverErrors = ServerValidationErrors.FromException(ex);
+            _generalError = _serverErrors.HasAny ? null : ApiExceptionHelper.GetUserMessage(ex);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void OnCancelButtonClicked()
+    {
+        MudDialog?.Cancel();
+    }
+}

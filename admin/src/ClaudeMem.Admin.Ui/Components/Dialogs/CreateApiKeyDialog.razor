@@ -1,0 +1,115 @@
+@inject IApiKeysClient ApiKeysClient
+@inject IJSRuntime Js
+@inject ISnackbar Snackbar
+@inject ILogger<CreateApiKeyDialog> Logger
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New API Key</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_createdApiKey is null)
+        {
+            <MudText Typo="Typo.body2" Class="mb-3">Give this key a label — typically the machine name or environment it will be used on.</MudText>
+            <MudTextField @bind-Value="_actorId" Label="Machine / Actor label" Variant="Variant.Outlined"
+                          Placeholder="e.g. pc-windows-wsl" Immediate="true" AutoFocus="true"
+                          Error="@_serverErrors.HasError("ActorId")"
+                          ErrorText="@_serverErrors.GetErrorText("ActorId")" />
+            @if (_generalError is not null)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_generalError</MudAlert>
+            }
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-3">Copy this key now — it will not be shown again.</MudAlert>
+            <MudTextField Value="@_createdApiKey.Key" Label="API Key" Variant="Variant.Outlined"
+                          ReadOnly="true" Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.ContentCopy" OnAdornmentClick="OnCopyKeyButtonClicked" AdornmentAriaLabel="Copy key" />
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (_createdApiKey is null)
+        {
+            <MudButton OnClick="OnCancelButtonClicked">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       OnClick="OnCreateApiKeyButtonClicked" Disabled="_busy">Create</MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnDoneButtonClicked">Done</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public string TeamId { get; set; } = string.Empty;
+    [Parameter] public string ProjectId { get; set; } = string.Empty;
+
+    private string _actorId = string.Empty;
+    private ServerValidationErrors _serverErrors = ServerValidationErrors.Empty;
+    private string? _generalError;
+    private bool _busy;
+    private NewApiKey? _createdApiKey;
+
+    private async Task OnCreateApiKeyButtonClicked()
+    {
+        if (string.IsNullOrWhiteSpace(_actorId))
+        {
+            _serverErrors = new ServerValidationErrors(new Dictionary<string, IEnumerable<string>>
+            {
+                { "ActorId", ["Label is required."] }
+            });
+            return;
+        }
+
+        _busy = true;
+        _serverErrors = ServerValidationErrors.Empty;
+        _generalError = null;
+        try
+        {
+            _createdApiKey = await ApiKeysClient.ApiKeysPostAsync(
+                new ApiKey(null, null, _actorId.Trim(), null, null),
+                TeamId,
+                ProjectId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to create API key for actor {ActorId}", _actorId);
+            _serverErrors = ServerValidationErrors.FromException(ex);
+            _generalError = _serverErrors.HasAny ? null : ApiExceptionHelper.GetUserMessage(ex);
+        }
+
+        _busy = false;
+    }
+
+    private async Task OnCopyKeyButtonClicked()
+    {
+        if (_createdApiKey is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _createdApiKey.Key);
+            Snackbar.Add("Key copied to clipboard.", Severity.Info);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Could not copy automatically. Please select and copy the key manually.", Severity.Warning);
+        }
+    }
+
+    private void OnDoneButtonClicked()
+    {
+        MudDialog?.Close(DialogResult.Ok(_createdApiKey));
+    }
+
+    private void OnCancelButtonClicked()
+    {
+        MudDialog?.Cancel();
+    }
+
+}
