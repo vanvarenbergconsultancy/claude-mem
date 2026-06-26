@@ -36,7 +36,7 @@ public class Program
 
         if (builder.Environment.IsEnvironment(Constants.Environments.Local) && builder.Configuration.GetValue<bool>(Constants.AppSettings.UseLocalContainerKey))
         {
-            var connectionString = await Infrastructure.LocalDevelopment.LocalContainerSetup.StartContainerAsync(CancellationToken.None);
+            var connectionString = await Infrastructure.LocalDevelopment.LocalContainerSetup.StartContainer(CancellationToken.None);
             AddAccessLayer(services, connectionString);
         }
         else

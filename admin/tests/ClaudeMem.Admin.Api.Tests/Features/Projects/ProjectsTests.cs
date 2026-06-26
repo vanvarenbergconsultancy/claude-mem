@@ -43,7 +43,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_TeamHasNoProjects_ReturnsEmptyPage()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var page = await _projects.ProjectsGetAsync(teamId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -53,10 +53,10 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_WithProjects_ReturnsOnlyProjectsForThatTeam()
     {
-        var team1 = await _db.InsertTeamAsync("Team 1");
-        var team2 = await _db.InsertTeamAsync("Team 2");
-        var proj1 = await _db.InsertProjectAsync(team1, "Project A");
-        await _db.InsertProjectAsync(team2, "Project B");
+        var team1 = await _db.InsertTeam("Team 1");
+        var team2 = await _db.InsertTeam("Team 2");
+        var proj1 = await _db.InsertProject(team1, "Project A");
+        await _db.InsertProject(team2, "Project B");
 
         var page = await _projects.ProjectsGetAsync(team1, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -69,23 +69,23 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_ReturnsCorrectCountsPerProject()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
-        var projectWithNoKeysOrObservations = await _db.InsertProjectAsync(teamId, "Project A");
-        var projectWith2ActiveKeysAnd1Observation = await _db.InsertProjectAsync(teamId, "Project B");
-        var projectWith1ActiveKey1RevokedKeyAndNoObservation = await _db.InsertProjectAsync(teamId, "Project C");
-        var projectWithNoKeysAnd2Observations = await _db.InsertProjectAsync(teamId, "Project D");
+        var projectWithNoKeysOrObservations = await _db.InsertProject(teamId, "Project A");
+        var projectWith2ActiveKeysAnd1Observation = await _db.InsertProject(teamId, "Project B");
+        var projectWith1ActiveKey1RevokedKeyAndNoObservation = await _db.InsertProject(teamId, "Project C");
+        var projectWithNoKeysAnd2Observations = await _db.InsertProject(teamId, "Project D");
 
-        await _db.InsertApiKeyAsync(teamId, projectWith2ActiveKeysAnd1Observation);
-        await _db.InsertApiKeyAsync(teamId, projectWith2ActiveKeysAnd1Observation);
-        await _db.InsertObservationAsync(teamId, projectWith2ActiveKeysAnd1Observation);
+        await _db.InsertApiKey(teamId, projectWith2ActiveKeysAnd1Observation);
+        await _db.InsertApiKey(teamId, projectWith2ActiveKeysAnd1Observation);
+        await _db.InsertObservation(teamId, projectWith2ActiveKeysAnd1Observation);
 
-        await _db.InsertApiKeyAsync(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
-        var revokedKey = await _db.InsertApiKeyAsync(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
-        await _db.RevokeApiKeyAsync(revokedKey);
+        await _db.InsertApiKey(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
+        var revokedKey = await _db.InsertApiKey(teamId, projectWith1ActiveKey1RevokedKeyAndNoObservation);
+        await _db.RevokeApiKey(revokedKey);
 
-        await _db.InsertObservationAsync(teamId, projectWithNoKeysAnd2Observations);
-        await _db.InsertObservationAsync(teamId, projectWithNoKeysAnd2Observations);
+        await _db.InsertObservation(teamId, projectWithNoKeysAnd2Observations);
+        await _db.InsertObservation(teamId, projectWithNoKeysAnd2Observations);
 
         var page = await _projects.ProjectsGetAsync(teamId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -114,11 +114,11 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_MultiPagePagination_LinksCorrect()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         for (var i = 0; i < 10; i++)
         {
-            await _db.InsertProjectAsync(teamId, $"Project {i:D2}");
+            await _db.InsertProject(teamId, $"Project {i:D2}");
         }
 
         var p1 = await _projects.ProjectsGetAsync(teamId, pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
@@ -153,7 +153,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -162,7 +162,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjects_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointProjectsByTeam("some-team"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -171,10 +171,10 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProject_ExistingProject_ReturnsDetail()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId, "Detailed Project");
-        await _db.InsertApiKeyAsync(teamId, projectId);
-        await _db.InsertObservationAsync(teamId, projectId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId, "Detailed Project");
+        await _db.InsertApiKey(teamId, projectId);
+        await _db.InsertObservation(teamId, projectId);
 
         var project = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
 
@@ -187,9 +187,9 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProject_ProjectInDifferentTeam_ReturnsProjectTeamMismatchProblemType()
     {
-        var team1 = await _db.InsertTeamAsync("Team 1");
-        var team2 = await _db.InsertTeamAsync("Team 2");
-        var projectId = await _db.InsertProjectAsync(team1);
+        var team1 = await _db.InsertTeam("Team 1");
+        var team2 = await _db.InsertTeam("Team 2");
+        var projectId = await _db.InsertProject(team1);
 
         var act = async () => await _projects.ProjectsGetAsync(team2, projectId, TestContext.Current.CancellationToken);
 
@@ -201,7 +201,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjectById_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -210,7 +210,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProjectById_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -219,7 +219,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task CreateProject_ValidRequest_ReturnsCreatedProject()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var project = await _projects.ProjectsPostAsync(new Project(null, null, "My Project", null, null, null), teamId, TestContext.Current.CancellationToken);
 
@@ -243,7 +243,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task CreateProject_EmptyName_Returns422()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var act = async () => await _projects.ProjectsPostAsync(new Project(null, null, "", null, null, null), teamId, TestContext.Current.CancellationToken);
 
@@ -257,7 +257,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [InlineData(257)]
     public async Task CreateProject_NameLengthTooSmallOrTooLong_Returns422(int length)
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var act = async () => await _projects.ProjectsPostAsync(new Project(null, null, new string('A', length), null, null, null), teamId, TestContext.Current.CancellationToken);
 
@@ -269,7 +269,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     [InlineData(256)]
     public async Task CreateProject_MinAndMaxLengthBoundaries_ReturnsCreatedProject(int length)
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var project = await _projects.ProjectsPostAsync(new Project(null, null, new string('A', length), null, null, null), teamId, TestContext.Current.CancellationToken);
 
@@ -284,7 +284,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     public async Task CreateProject_WithoutApiKey_Returns401()
     {
         var project = new Project(null, null, "Test Project", null, null, null);
-        var response = await _fixture.PostUnauthenticatedAsync(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticated(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -294,7 +294,7 @@ public sealed class ProjectsTests : IAsyncLifetime
     public async Task CreateProject_WithWrongApiKey_Returns401()
     {
         var project = new Project(null, null, "Test Project", null, null, null);
-        var response = await _fixture.PostWithWrongKeyAsync(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKey(EndpointProjectsByTeam("some-team"), project, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -303,10 +303,10 @@ public sealed class ProjectsTests : IAsyncLifetime
     [Fact]
     public async Task GetProject_RevokedApiKeysNotCounted()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var keyId = await _db.InsertApiKeyAsync(teamId, projectId);
-        await _db.RevokeApiKeyAsync(keyId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var keyId = await _db.InsertApiKey(teamId, projectId);
+        await _db.RevokeApiKey(keyId);
 
         var project = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
 

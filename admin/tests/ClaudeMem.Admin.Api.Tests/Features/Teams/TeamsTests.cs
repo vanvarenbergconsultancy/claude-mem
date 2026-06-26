@@ -43,8 +43,8 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeams_WithTeams_ReturnsTeams()
     {
-        var id1 = await _db.InsertTeamAsync("Alpha");
-        var id2 = await _db.InsertTeamAsync("Beta");
+        var id1 = await _db.InsertTeam("Alpha");
+        var id2 = await _db.InsertTeam("Beta");
 
         var page = await _teams.TeamsGetAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -56,11 +56,11 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeams_ReturnsProjectCountPerTeam()
     {
-        var teamAlphaId = await _db.InsertTeamAsync("Alpha");
-        var teamBetaId = await _db.InsertTeamAsync("Beta");
-        await _db.InsertProjectAsync(teamAlphaId, "Project A");
-        await _db.InsertProjectAsync(teamAlphaId, "Project B");
-        await _db.InsertProjectAsync(teamAlphaId, "Project C");
+        var teamAlphaId = await _db.InsertTeam("Alpha");
+        var teamBetaId = await _db.InsertTeam("Beta");
+        await _db.InsertProject(teamAlphaId, "Project A");
+        await _db.InsertProject(teamAlphaId, "Project B");
+        await _db.InsertProject(teamAlphaId, "Project C");
 
         var page = await _teams.TeamsGetAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -82,7 +82,7 @@ public sealed class TeamsTests : IAsyncLifetime
     {
         for (var i = 0; i < 10; i++)
         {
-            await _db.InsertTeamAsync($"Team {i:D2}");
+            await _db.InsertTeam($"Team {i:D2}");
         }
 
         var p1 = await _teams.TeamsGetAsync(pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
@@ -117,7 +117,7 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeams_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointTeams, TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointTeams, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -126,7 +126,7 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeams_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointTeams, TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointTeams, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -135,8 +135,8 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeam_ExistingTeam_ReturnsTeamDetail()
     {
-        var teamId = await _db.InsertTeamAsync("Detail Team");
-        await _db.InsertProjectAsync(teamId, "Project A");
+        var teamId = await _db.InsertTeam("Detail Team");
+        await _db.InsertProject(teamId, "Project A");
 
         var team = await _teams.TeamsGetAsync(teamId, TestContext.Current.CancellationToken);
 
@@ -159,7 +159,7 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeamById_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointTeamById("some-id"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointTeamById("some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -168,7 +168,7 @@ public sealed class TeamsTests : IAsyncLifetime
     [Fact]
     public async Task GetTeamById_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointTeamById("some-id"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointTeamById("some-id"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -222,7 +222,7 @@ public sealed class TeamsTests : IAsyncLifetime
     public async Task CreateTeam_WithoutApiKey_Returns401()
     {
         var team = new Team(null, "Test Team", null, null);
-        var response = await _fixture.PostUnauthenticatedAsync(EndpointTeams, team, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticated(EndpointTeams, team, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -232,7 +232,7 @@ public sealed class TeamsTests : IAsyncLifetime
     public async Task CreateTeam_WithWrongApiKey_Returns401()
     {
         var team = new Team(null, "Test Team", null, null);
-        var response = await _fixture.PostWithWrongKeyAsync(EndpointTeams, team, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKey(EndpointTeams, team, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

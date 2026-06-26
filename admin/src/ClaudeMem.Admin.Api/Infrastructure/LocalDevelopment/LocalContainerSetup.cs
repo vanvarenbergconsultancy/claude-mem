@@ -22,7 +22,7 @@ internal static class LocalContainerSetup
 {
     private const string SchemaResourceName = "ClaudeMem.Admin.Api.Infrastructure.Database.schema.sql";
 
-    public static async Task<string> StartContainerAsync(CancellationToken cancellationToken = default)
+    public static async Task<string> StartContainer(CancellationToken cancellationToken = default)
     {
 #pragma warning disable S2068 // Hard-coded local-only dev credentials, not a production secret
         var container = new PostgreSqlBuilder("postgres:17-alpine")
@@ -45,13 +45,13 @@ internal static class LocalContainerSetup
         }
 
         var connectionString = container.GetConnectionString();
-        await ApplySchemaAsync(connectionString, cancellationToken);
-        await SeedIfEmptyAsync(connectionString, cancellationToken);
+        await ApplySchema(connectionString, cancellationToken);
+        await SeedIfEmpty(connectionString, cancellationToken);
 
         return connectionString;
     }
 
-    private static async Task ApplySchemaAsync(string connectionString, CancellationToken cancellationToken)
+    private static async Task ApplySchema(string connectionString, CancellationToken cancellationToken)
     {
         var assembly = typeof(LocalContainerSetup).Assembly;
         await using var stream = assembly.GetManifestResourceStream(SchemaResourceName)
@@ -67,7 +67,7 @@ internal static class LocalContainerSetup
         await cmd.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task SeedIfEmptyAsync(string connectionString, CancellationToken cancellationToken)
+    private static async Task SeedIfEmpty(string connectionString, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
@@ -84,14 +84,14 @@ internal static class LocalContainerSetup
         var proj2Id = Guid.NewGuid().ToString();
         var proj3Id = Guid.NewGuid().ToString();
 
-        await SeedTeamsAsync(connection, team1Id, team2Id);
-        await SeedProjectsAsync(connection, team1Id, team2Id, proj1Id, proj2Id, proj3Id);
-        await SeedApiKeysAsync(connection, team1Id, proj1Id, proj2Id);
-        await SeedObservationsAsync(connection, team1Id, proj1Id);
-        await SeedJobsAsync(connection, team1Id, proj1Id);
+        await SeedTeams(connection, team1Id, team2Id);
+        await SeedProjects(connection, team1Id, team2Id, proj1Id, proj2Id, proj3Id);
+        await SeedApiKeys(connection, team1Id, proj1Id, proj2Id);
+        await SeedObservations(connection, team1Id, proj1Id);
+        await SeedJobs(connection, team1Id, proj1Id);
     }
 
-    private static async Task SeedTeamsAsync(NpgsqlConnection connection, string team1Id, string team2Id)
+    private static async Task SeedTeams(NpgsqlConnection connection, string team1Id, string team2Id)
     {
         await connection.ExecuteAsync("""
             INSERT INTO teams (id, name, created_at, updated_at) VALUES
@@ -100,7 +100,7 @@ internal static class LocalContainerSetup
             """, new { Id1 = team1Id, Id2 = team2Id });
     }
 
-    private static async Task SeedProjectsAsync(NpgsqlConnection connection, string team1Id, string team2Id, string proj1Id, string proj2Id, string proj3Id)
+    private static async Task SeedProjects(NpgsqlConnection connection, string team1Id, string team2Id, string proj1Id, string proj2Id, string proj3Id)
     {
         await connection.ExecuteAsync("""
             INSERT INTO projects (id, team_id, name, created_at, updated_at) VALUES
@@ -110,7 +110,7 @@ internal static class LocalContainerSetup
             """, new { P1 = proj1Id, P2 = proj2Id, P3 = proj3Id, T1 = team1Id, T2 = team2Id });
     }
 
-    private static async Task SeedApiKeysAsync(NpgsqlConnection connection, string teamId, string proj1Id, string proj2Id)
+    private static async Task SeedApiKeys(NpgsqlConnection connection, string teamId, string proj1Id, string proj2Id)
     {
         await connection.ExecuteAsync("""
             INSERT INTO api_keys (id, key_hash, team_id, project_id, actor_id, created_at, updated_at) VALUES
@@ -119,7 +119,7 @@ internal static class LocalContainerSetup
             """, new { K1 = Guid.NewGuid().ToString(), K2 = Guid.NewGuid().ToString(), T = teamId, P1 = proj1Id, P2 = proj2Id });
     }
 
-    private static async Task SeedObservationsAsync(NpgsqlConnection connection, string teamId, string projectId)
+    private static async Task SeedObservations(NpgsqlConnection connection, string teamId, string projectId)
     {
         string[] contents =
         [
@@ -139,7 +139,7 @@ internal static class LocalContainerSetup
         }
     }
 
-    private static async Task SeedJobsAsync(NpgsqlConnection connection, string teamId, string projectId)
+    private static async Task SeedJobs(NpgsqlConnection connection, string teamId, string projectId)
     {
         await connection.ExecuteAsync("""
             INSERT INTO observation_generation_jobs

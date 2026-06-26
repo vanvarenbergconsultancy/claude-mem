@@ -36,7 +36,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_NonExistentProject_ReturnsProjectTeamMismatchProblemType()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var act = async () => await _apiKeys.ApiKeysGetAsync(teamId, "no-such-project", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -46,8 +46,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_EmptyProject_ReturnsEmptyPage()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var page = await _apiKeys.ApiKeysGetAsync(teamId, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -57,11 +57,11 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_ExcludesRevokedKeys()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var activeKeyId = await _db.InsertApiKeyAsync(teamId, projectId, "active-actor");
-        var revokedKeyId = await _db.InsertApiKeyAsync(teamId, projectId, "revoked-actor");
-        await _db.RevokeApiKeyAsync(revokedKeyId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var activeKeyId = await _db.InsertApiKey(teamId, projectId, "active-actor");
+        var revokedKeyId = await _db.InsertApiKey(teamId, projectId, "revoked-actor");
+        await _db.RevokeApiKey(revokedKeyId);
 
         var page = await _apiKeys.ApiKeysGetAsync(teamId, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -73,11 +73,11 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_KeysOnlyReturnedForCorrectProject()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var project1 = await _db.InsertProjectAsync(teamId, "P1");
-        var project2 = await _db.InsertProjectAsync(teamId, "P2");
-        await _db.InsertApiKeyAsync(teamId, project1, "actor-1");
-        await _db.InsertApiKeyAsync(teamId, project2, "actor-2");
+        var teamId = await _db.InsertTeam();
+        var project1 = await _db.InsertProject(teamId, "P1");
+        var project2 = await _db.InsertProject(teamId, "P2");
+        await _db.InsertApiKey(teamId, project1, "actor-1");
+        await _db.InsertApiKey(teamId, project2, "actor-2");
 
         var page = await _apiKeys.ApiKeysGetAsync(teamId, project1, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -88,9 +88,9 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_ProjectInDifferentTeam_ReturnsProjectTeamMismatchProblemType()
     {
-        var team1 = await _db.InsertTeamAsync("Team A");
-        var team2 = await _db.InsertTeamAsync("Team B");
-        var projectId = await _db.InsertProjectAsync(team1);
+        var team1 = await _db.InsertTeam("Team A");
+        var team2 = await _db.InsertTeam("Team B");
+        var projectId = await _db.InsertProject(team1);
 
         var act = async () => await _apiKeys.ApiKeysGetAsync(team2, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -100,12 +100,12 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_MultiPagePagination_LinksCorrect()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         for (var i = 0; i < 10; i++)
         {
-            await _db.InsertApiKeyAsync(teamId, projectId, $"actor-{i:D2}");
+            await _db.InsertApiKey(teamId, projectId, $"actor-{i:D2}");
         }
 
         var p1 = await _apiKeys.ApiKeysGetAsync(teamId, projectId, pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
@@ -144,7 +144,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -153,7 +153,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task GetApiKeys_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointApiKeysByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -162,8 +162,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task CreateApiKey_ValidRequest_ReturnsKeyOnce()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var created = await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "ci-pipeline", null, null), teamId, projectId, TestContext.Current.CancellationToken);
 
@@ -175,8 +175,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task CreateApiKey_KeyHashedInDb_RawKeyNotStored()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var created = await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "verify-hash", null, null), teamId, projectId, TestContext.Current.CancellationToken);
 
@@ -194,7 +194,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task CreateApiKey_NonExistentProject_ReturnsProjectTeamMismatchProblemType()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var act = async () => await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "orphan-key", null, null), teamId, "no-such-project", TestContext.Current.CancellationToken);
 
@@ -204,8 +204,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task CreateApiKey_EmptyActorId_Returns422()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var act = async () => await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "", null, null), teamId, projectId, TestContext.Current.CancellationToken);
 
@@ -216,8 +216,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [InlineData(257)]
     public async Task CreateApiKey_ActorIdTooLong_Returns422(int length)
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var act = async () => await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, new string('a', length), null, null), teamId, projectId, TestContext.Current.CancellationToken);
 
@@ -229,8 +229,8 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [InlineData(256)]
     public async Task CreateApiKey_MinAndMaxLengthBoundaries_ReturnsCreatedApiKey(int length)
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
         var actorId = new string('a', length);
 
         var created = await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, actorId, null, null), teamId, projectId, TestContext.Current.CancellationToken);
@@ -245,7 +245,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     public async Task CreateApiKey_WithoutApiKey_Returns401()
     {
         var apiKey = new ApiKey(null, null, "test-actor", null, null);
-        var response = await _fixture.PostUnauthenticatedAsync(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticated(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -255,7 +255,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     public async Task CreateApiKey_WithWrongApiKey_Returns401()
     {
         var apiKey = new ApiKey(null, null, "test-actor", null, null);
-        var response = await _fixture.PostWithWrongKeyAsync(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKey(EndpointApiKeysByProject("some-team", "some-project"), apiKey, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -264,9 +264,9 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_ExistingKey_RevokesItAndReturns204()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var keyId = await _db.InsertApiKeyAsync(teamId, projectId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var keyId = await _db.InsertApiKey(teamId, projectId);
 
         await _apiKeys.ApiKeysDeleteAsync(teamId, projectId, keyId, TestContext.Current.CancellationToken);
 
@@ -277,10 +277,10 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_AlreadyRevoked_ReturnsApiKeyNotFoundProblemType()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var keyId = await _db.InsertApiKeyAsync(teamId, projectId);
-        await _db.RevokeApiKeyAsync(keyId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var keyId = await _db.InsertApiKey(teamId, projectId);
+        await _db.RevokeApiKey(keyId);
 
         var act = async () => await _apiKeys.ApiKeysDeleteAsync(teamId, projectId, keyId, TestContext.Current.CancellationToken);
 
@@ -290,11 +290,11 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_KeyInDifferentTeam_ReturnsApiKeyNotFoundProblemType()
     {
-        var team1 = await _db.InsertTeamAsync("T1");
-        var team2 = await _db.InsertTeamAsync("T2");
-        var project1 = await _db.InsertProjectAsync(team1);
-        var project2 = await _db.InsertProjectAsync(team2);
-        var keyId = await _db.InsertApiKeyAsync(team1, project1);
+        var team1 = await _db.InsertTeam("T1");
+        var team2 = await _db.InsertTeam("T2");
+        var project1 = await _db.InsertProject(team1);
+        var project2 = await _db.InsertProject(team2);
+        var keyId = await _db.InsertApiKey(team1, project1);
 
         var act = async () => await _apiKeys.ApiKeysDeleteAsync(team2, project2, keyId, TestContext.Current.CancellationToken);
 
@@ -304,7 +304,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.DeleteUnauthenticatedAsync(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
+        var response = await _fixture.DeleteUnauthenticated(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -313,7 +313,7 @@ public sealed class ApiKeysTests : IAsyncLifetime
     [Fact]
     public async Task DeleteApiKey_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.DeleteWithWrongKeyAsync(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
+        var response = await _fixture.DeleteWithWrongKey(EndpointApiKeyById("some-team", "some-project", "some-key"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

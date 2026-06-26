@@ -25,7 +25,7 @@ internal sealed class CursorStoreCleanupService : BackgroundService
         {
             foreach (var store in _stores)
             {
-                await store.PurgeExpiredAsync(stoppingToken);
+                await store.PurgeExpired(stoppingToken);
             }
         }
     }

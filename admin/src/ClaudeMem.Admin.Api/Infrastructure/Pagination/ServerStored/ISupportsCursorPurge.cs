@@ -11,11 +11,11 @@ namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
 /// Only stores that perform their own bookkeeping need to implement it.
 /// <para>
 /// <c>CursorStoreCleanupService</c> resolves all <see cref="ISupportsCursorPurge"/> registrations via <c>IEnumerable&lt;ISupportsCursorPurge&gt;</c>
-/// and calls <see cref="PurgeExpiredAsync"/> on each store on every scheduled tick.
+/// and calls <see cref="PurgeExpired"/> on each store on every scheduled tick.
 /// </para>
 /// </remarks>
 internal interface ISupportsCursorPurge
 {
     /// <summary>Removes all entries whose expiry timestamp has passed.</summary>
-    Task PurgeExpiredAsync(CancellationToken cancellationToken = default);
+    Task PurgeExpired(CancellationToken cancellationToken = default);
 }

@@ -10,7 +10,7 @@ namespace ClaudeMem.Admin.Api.Infrastructure.Pagination.ServerStored;
 /// No external dependencies; state is lost on process restart.
 /// </summary>
 /// <remarks>
-/// Expiry is checked lazily on <see cref="Retrieve"/> and proactively on each <see cref="PurgeExpiredAsync"/> tick fired by <see cref="CursorStoreCleanupService"/>.
+/// Expiry is checked lazily on <see cref="Retrieve"/> and proactively on each <see cref="PurgeExpired"/> tick fired by <see cref="CursorStoreCleanupService"/>.
 /// Token is deleted after retrieval to enforce single-use, but expired tokens are purged only on cleanup ticks to avoid unnecessary store churn.
 /// <para>
 /// Suitable for single-instance deployments only.
@@ -57,7 +57,7 @@ internal sealed class InMemoryCursorStore : ICursorStore, ISupportsCursorPurge
         return Task.FromResult<CursorPayload?>(originalPayloadForOpaqueToken);
     }
 
-    public Task PurgeExpiredAsync(CancellationToken cancellationToken = default)
+    public Task PurgeExpired(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
         foreach (var kvp in _store)

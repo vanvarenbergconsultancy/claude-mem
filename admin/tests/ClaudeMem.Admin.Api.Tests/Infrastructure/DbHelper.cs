@@ -19,7 +19,7 @@ internal sealed class DbHelper
         return new NpgsqlConnection(_connectionString);
     }
 
-    public async Task<string> InsertTeamAsync(string name = "Test Team")
+    public async Task<string> InsertTeam(string name = "Test Team")
     {
         var id = Guid.NewGuid().ToString();
 
@@ -32,7 +32,7 @@ internal sealed class DbHelper
         return id;
     }
 
-    public async Task<string> InsertProjectAsync(string teamId, string name = "Test Project")
+    public async Task<string> InsertProject(string teamId, string name = "Test Project")
     {
         var id = Guid.NewGuid().ToString();
 
@@ -45,7 +45,7 @@ internal sealed class DbHelper
         return id;
     }
 
-    public async Task<string> InsertApiKeyAsync(string teamId, string projectId, string actorId = "test-actor", string? keyHash = null)
+    public async Task<string> InsertApiKey(string teamId, string projectId, string actorId = "test-actor", string? keyHash = null)
     {
         var id = Guid.NewGuid().ToString();
         var hash = keyHash ?? Guid.NewGuid().ToString("N");
@@ -59,7 +59,7 @@ internal sealed class DbHelper
         return id;
     }
 
-    public async Task<string> InsertObservationAsync(string teamId, string projectId, string content = "Test observation content.")
+    public async Task<string> InsertObservation(string teamId, string projectId, string content = "Test observation content.")
     {
         var id = Guid.NewGuid().ToString();
 
@@ -72,7 +72,7 @@ internal sealed class DbHelper
         return id;
     }
 
-    public async Task<string> InsertJobAsync(string teamId, string projectId, string status = "queued", string sourceType = "observation_reindex")
+    public async Task<string> InsertJob(string teamId, string projectId, string status = "queued", string sourceType = "observation_reindex")
     {
         var id = Guid.NewGuid().ToString();
         var idempotencyKey = Guid.NewGuid().ToString();
@@ -100,7 +100,7 @@ internal sealed class DbHelper
         return id;
     }
 
-    public async Task RevokeApiKeyAsync(string keyId)
+    public async Task RevokeApiKey(string keyId)
     {
         await using var connection = CreateConnection();
 

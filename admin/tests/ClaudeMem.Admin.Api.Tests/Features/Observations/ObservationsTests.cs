@@ -35,7 +35,7 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_NonExistentProject_ReturnsProjectTeamMismatchProblemType()
     {
-        var teamId = await _db.InsertTeamAsync();
+        var teamId = await _db.InsertTeam();
 
         var act = async () => await _observations.ObservationsAsync(teamId, "no-project", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -45,8 +45,8 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_EmptyProject_ReturnsEmptyPage()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         var page = await _observations.ObservationsAsync(teamId, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -56,10 +56,10 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithObservations_ReturnsThemInDescendingOrder()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var id1 = await _db.InsertObservationAsync(teamId, projectId, "First observation");
-        var id2 = await _db.InsertObservationAsync(teamId, projectId, "Second observation");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var id1 = await _db.InsertObservation(teamId, projectId, "First observation");
+        var id2 = await _db.InsertObservation(teamId, projectId, "Second observation");
 
         var page = await _observations.ObservationsAsync(teamId, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -71,11 +71,11 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_OnlyReturnsObservationsForCorrectProject()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var project1 = await _db.InsertProjectAsync(teamId, "P1");
-        var project2 = await _db.InsertProjectAsync(teamId, "P2");
-        var obsId = await _db.InsertObservationAsync(teamId, project1, "Project 1 obs");
-        await _db.InsertObservationAsync(teamId, project2, "Project 2 obs");
+        var teamId = await _db.InsertTeam();
+        var project1 = await _db.InsertProject(teamId, "P1");
+        var project2 = await _db.InsertProject(teamId, "P2");
+        var obsId = await _db.InsertObservation(teamId, project1, "Project 1 obs");
+        await _db.InsertObservation(teamId, project2, "Project 2 obs");
 
         var page = await _observations.ObservationsAsync(teamId, project1, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -87,9 +87,9 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_ProjectInDifferentTeam_ReturnsProjectTeamMismatchProblemType()
     {
-        var team1 = await _db.InsertTeamAsync("T1");
-        var team2 = await _db.InsertTeamAsync("T2");
-        var projectId = await _db.InsertProjectAsync(team1);
+        var team1 = await _db.InsertTeam("T1");
+        var team2 = await _db.InsertTeam("T2");
+        var projectId = await _db.InsertProject(team1);
 
         var act = async () => await _observations.ObservationsAsync(team2, projectId, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -99,10 +99,10 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithSearchQuery_FiltersResults()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        await _db.InsertObservationAsync(teamId, projectId, "Learned about PostgreSQL indexing strategies.");
-        await _db.InsertObservationAsync(teamId, projectId, "Refactored the authentication middleware.");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        await _db.InsertObservation(teamId, projectId, "Learned about PostgreSQL indexing strategies.");
+        await _db.InsertObservation(teamId, projectId, "Refactored the authentication middleware.");
 
         var page = await _observations.ObservationsAsync(teamId, projectId, q: "PostgreSQL", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -114,12 +114,12 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_MultiPagePagination_LinksCorrect()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         for (var i = 0; i < 10; i++)
         {
-            await _db.InsertObservationAsync(teamId, projectId, $"Observation number {i}.");
+            await _db.InsertObservation(teamId, projectId, $"Observation number {i}.");
         }
 
         var p1 = await _observations.ObservationsAsync(teamId, projectId, pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
@@ -154,7 +154,7 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -163,7 +163,7 @@ public sealed class ObservationsTests : IAsyncLifetime
     [Fact]
     public async Task GetObservations_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointObservationsByProject("some-team", "some-project"), TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);

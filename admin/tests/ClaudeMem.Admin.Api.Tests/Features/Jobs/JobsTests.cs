@@ -43,10 +43,10 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_WithJobs_ReturnsAll()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        await _db.InsertJobAsync(teamId, projectId, "queued");
-        await _db.InsertJobAsync(teamId, projectId, "failed");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        await _db.InsertJob(teamId, projectId, "queued");
+        await _db.InsertJob(teamId, projectId, "failed");
 
         var page = await _jobs.JobsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -56,10 +56,10 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_FilterByStatus_ReturnsMatchingJobs()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var failedId = await _db.InsertJobAsync(teamId, projectId, "failed");
-        await _db.InsertJobAsync(teamId, projectId, "completed");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var failedId = await _db.InsertJob(teamId, projectId, "failed");
+        await _db.InsertJob(teamId, projectId, "completed");
 
         var page = await _jobs.JobsAsync(status: "failed", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -72,11 +72,11 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_FilterByProjectId_ReturnsOnlyThatProjectsJobs()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var project1 = await _db.InsertProjectAsync(teamId, "P1");
-        var project2 = await _db.InsertProjectAsync(teamId, "P2");
-        var job1Id = await _db.InsertJobAsync(teamId, project1, "queued");
-        await _db.InsertJobAsync(teamId, project2, "queued");
+        var teamId = await _db.InsertTeam();
+        var project1 = await _db.InsertProject(teamId, "P1");
+        var project2 = await _db.InsertProject(teamId, "P2");
+        var job1Id = await _db.InsertJob(teamId, project1, "queued");
+        await _db.InsertJob(teamId, project2, "queued");
 
         var page = await _jobs.JobsAsync(projectId: project1, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -87,12 +87,12 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_MultiPagePagination_LinksCorrect()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
 
         for (var i = 0; i < 10; i++)
         {
-            await _db.InsertJobAsync(teamId, projectId, "completed");
+            await _db.InsertJob(teamId, projectId, "completed");
         }
 
         var p1 = await _jobs.JobsAsync(pageSize: 3, cancellationToken: TestContext.Current.CancellationToken);
@@ -127,7 +127,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.GetUnauthenticatedAsync(EndpointJobs, TestContext.Current.CancellationToken);
+        var response = await _fixture.GetUnauthenticated(EndpointJobs, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -136,7 +136,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task GetJobs_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.GetWithWrongKeyAsync(EndpointJobs, TestContext.Current.CancellationToken);
+        var response = await _fixture.GetWithWrongKey(EndpointJobs, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -145,9 +145,9 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_FailedJob_ResetsStatusToQueued()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var jobId = await _db.InsertJobAsync(teamId, projectId, "failed");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var jobId = await _db.InsertJob(teamId, projectId, "failed");
 
         await _jobs.RetryAsync(jobId, TestContext.Current.CancellationToken);
 
@@ -169,9 +169,9 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_NotFailedJob_ReturnsJobNotInFailedStateProblemType()
     {
-        var teamId = await _db.InsertTeamAsync();
-        var projectId = await _db.InsertProjectAsync(teamId);
-        var jobId = await _db.InsertJobAsync(teamId, projectId, "completed");
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var jobId = await _db.InsertJob(teamId, projectId, "completed");
 
         var act = async () => await _jobs.RetryAsync(jobId, TestContext.Current.CancellationToken);
 
@@ -181,7 +181,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_WithoutApiKey_Returns401()
     {
-        var response = await _fixture.PostUnauthenticatedAsync(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostUnauthenticated(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
@@ -190,7 +190,7 @@ public sealed class JobsTests : IAsyncLifetime
     [Fact]
     public async Task RetryJob_WithWrongApiKey_Returns401()
     {
-        var response = await _fixture.PostWithWrongKeyAsync(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
+        var response = await _fixture.PostWithWrongKey(EndpointJobRetry("some-id"), new { }, TestContext.Current.CancellationToken);
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
