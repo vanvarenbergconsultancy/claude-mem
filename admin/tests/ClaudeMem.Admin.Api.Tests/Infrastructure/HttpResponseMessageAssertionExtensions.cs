@@ -1,5 +1,4 @@
 using System.Net.Http;
-using AwesomeAssertions;
 using AwesomeAssertions.Execution;
 
 namespace ClaudeMem.Admin.Api.Tests.Infrastructure;

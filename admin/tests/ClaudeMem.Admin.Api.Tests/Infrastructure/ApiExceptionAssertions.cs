@@ -1,11 +1,9 @@
 using System;
 using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
 using AwesomeAssertions;
 using AwesomeAssertions.Execution;
 using AwesomeAssertions.Primitives;
-using AwesomeAssertions.Specialized;
 using ClaudeMem.Admin.Api.Contracts;
 
 namespace ClaudeMem.Admin.Api.Tests.Infrastructure;
