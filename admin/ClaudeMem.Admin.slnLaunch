@@ -5,12 +5,12 @@
       {
         "Path": "src\\ClaudeMem.Admin.Api\\ClaudeMem.Admin.Api.csproj",
         "Action": "Start",
-        "DebugTarget": "https"
+        "DebugTarget": "local"
       },
       {
         "Path": "src\\ClaudeMem.Admin.Ui\\ClaudeMem.Admin.Ui.csproj",
         "Action": "Start",
-        "DebugTarget": "https"
+        "DebugTarget": "local"
       }
     ]
   }

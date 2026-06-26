@@ -30,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Infrastructure\schema.sql" />
     <None Update="appsettings.Test.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

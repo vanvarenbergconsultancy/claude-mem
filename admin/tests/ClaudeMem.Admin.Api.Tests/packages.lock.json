@@ -652,7 +652,8 @@
           "FluentValidation.DependencyInjectionExtensions": "[12.1.1, )",
           "Mediator.Abstractions": "[3.0.2, )",
           "Microsoft.AspNetCore.OpenApi": "[10.0.8, )",
-          "Npgsql": "[10.0.2, )"
+          "Npgsql": "[10.0.2, )",
+          "Testcontainers.PostgreSql": "[4.12.0, )"
         }
       },
       "claudemem.admin.api.contracts": {

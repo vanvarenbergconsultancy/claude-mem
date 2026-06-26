@@ -139,8 +139,8 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
 
     private static string LoadSchemaSql()
     {
-        var assembly = Assembly.GetExecutingAssembly();
-        const string sqlManifestResourceName = "ClaudeMem.Admin.Api.Tests.Infrastructure.schema.sql";
+        var assembly = typeof(Program).Assembly;
+        const string sqlManifestResourceName = "ClaudeMem.Admin.Api.Infrastructure.Database.schema.sql";
         using var stream = assembly.GetManifestResourceStream(sqlManifestResourceName);
         if (stream is null)
         {

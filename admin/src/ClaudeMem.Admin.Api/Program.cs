@@ -3,7 +3,6 @@ using ClaudeMem.Admin.Api.Infrastructure.Pagination;
 using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
 using FluentValidation;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +14,8 @@ using Npgsql;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ClaudeMem.Admin.Api.Infrastructure;
 using ClaudeMem.Admin.Api.Infrastructure.Database;
 
@@ -24,7 +25,7 @@ public class Program
 {
     protected Program() { }
 
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
         var services = builder.Services;
@@ -33,7 +34,16 @@ public class Program
         AddErrorHandling(services);
         AddApplicationLayer(services);
 
-        AddAccessLayer(services, builder.Configuration);
+        if (builder.Environment.IsEnvironment(Constants.Environments.Local) && builder.Configuration.GetValue<bool>(Constants.AppSettings.UseLocalContainerKey))
+        {
+            var connectionString = await Infrastructure.LocalDevelopment.LocalContainerSetup.StartContainerAsync(CancellationToken.None);
+            AddAccessLayer(services, connectionString);
+        }
+        else
+        {
+            AddAccessLayer(services, builder.Configuration);
+        }
+
         AddApiLayer(services);
 
         var app = builder.Build();
@@ -49,7 +59,7 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
 
-        app.Run();
+        await app.RunAsync();
     }
 
     private static void AddApiKeyAuth(IServiceCollection services, IConfiguration configuration)
@@ -57,8 +67,8 @@ public class Program
         var apiKey = LoadApiKey(configuration);
 
         services
-            .AddAuthentication("ApiKey")
-            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>("ApiKey", options =>
+            .AddAuthentication(Constants.Authentication.ApiKeySchemeName)
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(Constants.Authentication.ApiKeySchemeName, options =>
             {
                 options.Key = apiKey;
             });
@@ -71,17 +81,16 @@ public class Program
 
     private static string LoadApiKey(IConfiguration configuration)
     {
-        const string secretPath = "/run/secrets/admin_api_key";
-
+        const string secretPath = Constants.Docker.AdminApiKeySecretPath;
         if (File.Exists(secretPath))
         {
             return File.ReadAllText(secretPath).Trim();
         }
 
-        var adminApiKey = configuration["AdminApiKey"];
+        var adminApiKey = configuration[Constants.AppSettings.AdminApiKey];
         if (string.IsNullOrWhiteSpace(adminApiKey))
         {
-            throw new InvalidOperationException("Admin API key is not configured. Mount it as a Docker secret at /run/secrets/admin_api_key or set AdminApiKey in configuration.");
+            throw new InvalidOperationException($"Admin API key is not configured. Mount it as a Docker secret at {Constants.Docker.AdminApiKeySecretPath} or set {Constants.AppSettings.AdminApiKey} in configuration.");
         }
 
         return adminApiKey;
@@ -111,6 +120,13 @@ public class Program
         AddAccessLayerServices(services);
     }
 
+    private static void AddAccessLayer(IServiceCollection services, string connectionString)
+    {
+        ConfigureDapperGlobalSettings();
+        services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
+        AddAccessLayerServices(services);
+    }
+
     private static void ConfigureDapperGlobalSettings()
     {
         DefaultTypeMap.MatchNamesWithUnderscores = true;
@@ -120,8 +136,8 @@ public class Program
 
     private static void AddDbDataSource(IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Default")
-                               ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
+        var connectionString = configuration.GetConnectionString(Constants.ConnectionStrings.ConnectionStringName)
+                               ?? throw new InvalidOperationException($"Connection string '{Constants.ConnectionStrings.ConnectionStringName}' is not configured.");
 
         services.AddSingleton<NpgsqlDataSource>(_ => NpgsqlDataSource.Create(connectionString));
     }

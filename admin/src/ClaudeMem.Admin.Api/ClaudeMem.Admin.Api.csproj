@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Infrastructure\Database\schema.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" />
     <PackageReference Include="Dapper.SqlBuilder" />
     <PackageReference Include="FluentValidation" />
@@ -21,6 +25,7 @@
     <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Npgsql" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
   </ItemGroup>
 
 </Project>
