@@ -28,13 +28,15 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var isLocalEnvironment = builder.Environment.IsEnvironment(Constants.Environments.Local);
         var services = builder.Services;
 
         AddApiKeyAuth(services, builder.Configuration);
         AddErrorHandling(services);
         AddApplicationLayer(services);
-
-        if (builder.Environment.IsEnvironment(Constants.Environments.Local) && builder.Configuration.GetValue<bool>(Constants.AppSettings.UseLocalContainerKey))
+        
+        
+        if (isLocalEnvironment && builder.Configuration.GetValue<bool>(Constants.AppSettings.UseLocalContainerKey))
         {
             var connectionString = await Infrastructure.LocalDevelopment.LocalContainerSetup.StartContainer(CancellationToken.None);
             AddAccessLayer(services, connectionString);
@@ -46,7 +48,7 @@ public class Program
 
         AddApiLayer(services);
 
-        if (builder.Environment.IsEnvironment(Constants.Environments.Local))
+        if (isLocalEnvironment)
         {
             builder.Host.UseDefaultServiceProvider(options =>
             {
@@ -54,14 +56,14 @@ public class Program
                 options.ValidateOnBuild = true;
             });
 
-            builder.Configuration.AddUserSecrets<Program>();
+            builder.Configuration.AddUserSecrets<Program>(optional: true);
         }
 
         var app = builder.Build();
 
         app.UseExceptionHandler();
 
-        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment(Constants.Environments.Local))
+        if (app.Environment.IsDevelopment() || isLocalEnvironment)
         {
             app.MapOpenApi();
         }

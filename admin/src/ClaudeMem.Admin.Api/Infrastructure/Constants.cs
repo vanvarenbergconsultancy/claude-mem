@@ -29,7 +29,7 @@ namespace ClaudeMem.Admin.Api.Infrastructure
 
         public static class Environments
         {
-            public const string Local = "local";
+            public const string Local = "Local";
         }
 
         /// <summary>HTTP status code conventions agreed across all endpoints.</summary>
