@@ -1,13 +1,14 @@
 <Solution>
   <Folder Name="/solution/">
     <File Path=".editorconfig" />
+    <File Path="ClaudeMem.Admin.slnLaunch" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="NuGet.Config" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/ClaudeMem.Admin.Api.Contracts/ClaudeMem.Admin.Api.Contracts.csproj" Id="5172ba02-3719-4531-a162-d7b2b9ab041c" />
     <Project Path="src/ClaudeMem.Admin.Api.Contracts.Generator/ClaudeMem.Admin.Api.Contracts.Generator.csproj" />
+    <Project Path="src/ClaudeMem.Admin.Api.Contracts/ClaudeMem.Admin.Api.Contracts.csproj" Id="5172ba02-3719-4531-a162-d7b2b9ab041c" />
     <Project Path="src/ClaudeMem.Admin.Api/ClaudeMem.Admin.Api.csproj" />
     <Project Path="src/ClaudeMem.Admin.Ui/ClaudeMem.Admin.Ui.csproj" />
   </Folder>

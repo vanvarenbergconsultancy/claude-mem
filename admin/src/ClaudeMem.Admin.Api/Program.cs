@@ -35,7 +35,6 @@ public class Program
         AddErrorHandling(services);
         AddApplicationLayer(services);
         
-        
         if (isLocalEnvironment && builder.Configuration.GetValue<bool>(Constants.AppSettings.UseLocalContainerKey))
         {
             var connectionString = await Infrastructure.LocalDevelopment.LocalContainerSetup.StartContainer(CancellationToken.None);
