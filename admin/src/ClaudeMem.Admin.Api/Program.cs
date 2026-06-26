@@ -46,11 +46,22 @@ public class Program
 
         AddApiLayer(services);
 
+        if (builder.Environment.IsEnvironment(Constants.Environments.Local))
+        {
+            builder.Host.UseDefaultServiceProvider(options =>
+            {
+                options.ValidateScopes = true;
+                options.ValidateOnBuild = true;
+            });
+
+            builder.Configuration.AddUserSecrets<Program>();
+        }
+
         var app = builder.Build();
 
         app.UseExceptionHandler();
 
-        if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment(Constants.Environments.Local))
         {
             app.MapOpenApi();
         }
