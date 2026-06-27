@@ -1,0 +1,119 @@
+@page "/teams"
+@inject ITeamsClient TeamsClient
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Teams — ClaudeMem Admin</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h4">Teams</MudText>
+    <MudSpacer />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="OpenCreateTeamDialog">New Team</MudButton>
+</MudStack>
+
+<LoadStateView TData="TeamPage" IsLoading="_loading" Data="_teams"
+               ErrorMessage="Could not load teams. Check the API connection.">
+    <ChildContent Context="teams">
+        <MudTable Items="teams.Items" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@(EventCallback.Factory.Create<TableRowClickEventArgs<Team>>(this, NavigateToTeam))"
+                  RowClass="cursor-pointer">
+            <HeaderContent>
+                <MudTh Style="min-width:200px">Name</MudTh>
+                <MudTh Style="min-width:180px">ID</MudTh>
+                <MudTh Style="min-width:80px">Projects</MudTh>
+                <MudTh Style="min-width:110px">Created</MudTh>
+                <MudTh Style="width:1%;white-space:nowrap"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">
+                    <MudText Typo="Typo.body2"><b>@context.Name</b></MudText>
+                </MudTd>
+                <MudTd DataLabel="ID">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Id</MudText>
+                </MudTd>
+                <MudTd DataLabel="Projects">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default">@(context.ProjectCount?.ToString() ?? "—")</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Created">
+                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateOnly)</MudText>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"
+                                   Href="@($"/teams/{context.Id}")" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4 mud-text-secondary">No teams yet. Create your first team to get started.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        @if (teams.Next is not null)
+        {
+            <MudButton Class="mt-2" OnClick="LoadMore" Variant="Variant.Text">Load more</MudButton>
+        }
+    </ChildContent>
+</LoadStateView>
+
+@code {
+    [CascadingParameter] private ProcessError? ProcessError { get; set; }
+
+    private TeamPage? _teams;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _teams = await TeamsClient.TeamsGetAsync();
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _loading = false;
+    }
+
+    private async Task LoadMore()
+    {
+        if (_teams?.Next is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var cursor = CursorHelper.ExtractCursor(_teams.Next);
+            var nextPage = await TeamsClient.TeamsGetAsync(cursor: cursor);
+            var allTeamItems = (_teams.Items as List<Team>) ?? new List<Team>(_teams.Items);
+            allTeamItems.AddRange(nextPage.Items);
+            _teams = new TeamPage(nextPage.Self, _teams.First, nextPage.Next, allTeamItems);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+    }
+
+    private void NavigateToTeam(TableRowClickEventArgs<Team> args)
+    {
+        if (args.Item?.Id is not null)
+        {
+            Nav.NavigateTo($"/teams/{args.Item.Id}");
+        }
+    }
+
+    private async Task OpenCreateTeamDialog()
+    {
+        var createTeamDialogRef = await Dialogs.ShowAsync<CreateTeamDialog>("New Team");
+        var createTeamDialogResult = await createTeamDialogRef.Result;
+        var createTeamDialogResultIsNotCancelled = createTeamDialogResult is not null && !createTeamDialogResult.Canceled;
+        var createdTeam = createTeamDialogResult?.Data as Team;
+        if (createTeamDialogResultIsNotCancelled && createdTeam is not null)
+        {
+            Snackbar.Add($"Team '{createdTeam.Name}' created.", Severity.Success);
+            Nav.NavigateTo($"/teams/{createdTeam.Id}");
+        }
+    }
+}

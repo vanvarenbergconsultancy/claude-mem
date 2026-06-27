@@ -1,0 +1,21 @@
+@page "/api-keys"
+@inject NavigationManager Nav
+
+<PageTitle>API Keys — ClaudeMem Admin</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">API Keys</MudText>
+
+<MudAlert Severity="Severity.Info" Class="mb-4">
+    API keys are scoped to projects. Open a project to manage its keys under the API Keys tab.
+</MudAlert>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups"
+           OnClick="OnGoToTeamsButtonClicked">Go to Teams</MudButton>
+
+@code {
+    private void OnGoToTeamsButtonClicked()
+    {
+        Nav.NavigateTo("/teams");
+    }
+
+}

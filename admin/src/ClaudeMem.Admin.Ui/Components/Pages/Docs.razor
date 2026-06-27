@@ -1,0 +1,272 @@
+@page "/docs"
+
+<PageTitle>Documentation — ClaudeMem Admin</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Documentation</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="3">
+        <MudPaper Elevation="1" Class="pa-3" Style="position:sticky;top:80px">
+            <MudNavMenu>
+                <MudNavLink Href="#concepts">Concepts</MudNavLink>
+                <MudNavLink Href="#setup-team">1. Create a Team</MudNavLink>
+                <MudNavLink Href="#setup-project">2. Create a Project</MudNavLink>
+                <MudNavLink Href="#setup-keys">3. Create API Keys</MudNavLink>
+                <MudNavLink Href="#global-config">Global Config (all repos)</MudNavLink>
+                <MudNavLink Href="#per-repo-config">Per-Repo Config</MudNavLink>
+                <MudNavLink Href="#troubleshooting">Troubleshooting</MudNavLink>
+            </MudNavMenu>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="9">
+
+        <!-- CONCEPTS -->
+        <MudPaper id="concepts" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Concepts</MudText>
+
+            <MudText Typo="Typo.body1" Class="mb-3">
+                ClaudeMem organises memory in a three-level hierarchy:
+            </MudText>
+
+            <MudSimpleTable Dense="true" Bordered="true" Class="mb-4">
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Purpose</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Team</strong></td>
+                        <td>Top-level organisational unit. Groups related projects.</td>
+                        <td><em>VVC</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Project</strong></td>
+                        <td>Scopes memory for one repository or context. Each project is isolated — observations from one project never bleed into another.</td>
+                        <td><em>vvc.common</em>, <em>global-default</em></td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Key</strong></td>
+                        <td>Authenticates one machine to one project. Each machine that uses a project needs its own key.</td>
+                        <td><em>pc-windows-wsl</em>, <em>pc-windows-powershell</em></td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+
+            <MudAlert Severity="Severity.Info">
+                An API key is always scoped to exactly one project. If Claude Code sends events with a
+                <code>projectId</code> that doesn't match the key's project, the server returns
+                <strong>403 Forbidden — "API key is scoped to a different project"</strong>.
+                Every project needs its own set of keys, one per machine.
+            </MudAlert>
+        </MudPaper>
+
+        <!-- STEP 1: CREATE TEAM -->
+        <MudPaper id="setup-team" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Step 1 — Create a Team</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">
+                Go to <MudLink Href="/teams">Teams</MudLink> and click <strong>New Team</strong>.
+                One team is enough for most setups. Name it after your organisation or workspace.
+            </MudText>
+            <MudAlert Severity="Severity.Success" Class="mt-2">
+                Note the Team ID — you'll need it when creating projects and keys via the CLI if you ever bypass this UI.
+            </MudAlert>
+        </MudPaper>
+
+        <!-- STEP 2: CREATE PROJECT -->
+        <MudPaper id="setup-project" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Step 2 — Create a Project</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">
+                Open your team, then click <strong>New Project</strong>. Create one project per distinct
+                memory context:
+            </MudText>
+            <MudList T="string" Dense="true" Class="mb-3">
+                <MudListItem Icon="@Icons.Material.Filled.FolderOpen">
+                    <strong>One project per repository</strong> — keeps repo-specific learnings isolated.
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Filled.FolderOpen">
+                    <strong>One global-fallback project</strong> — used by repos that have no per-repo override.
+                    Good for cross-cutting notes that apply everywhere.
+                </MudListItem>
+            </MudList>
+            <MudAlert Severity="Severity.Success">
+                Copy the Project ID shown on the project detail page. You'll put it in
+                <code>.claude/settings.json</code> (per-repo) or <code>~/.claude-mem/settings.json</code> (global).
+            </MudAlert>
+        </MudPaper>
+
+        <!-- STEP 3: CREATE API KEYS -->
+        <MudPaper id="setup-keys" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Step 3 — Create API Keys</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">
+                Open a project, go to the <strong>API Keys</strong> tab, click <strong>New Key</strong>.
+                Enter a label that identifies the machine (e.g. <em>pc-windows-wsl</em>).
+            </MudText>
+            <MudAlert Severity="Severity.Warning" Class="mb-3">
+                The full key value (<code>cmem_...</code>) is shown only once. Copy it immediately.
+            </MudAlert>
+            <MudText Typo="Typo.body1">
+                Create one key per machine per project. If you have two machines and two projects,
+                you need four keys total.
+            </MudText>
+        </MudPaper>
+
+        <!-- GLOBAL CONFIG -->
+        <MudPaper id="global-config" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Global Configuration (all repos on a machine)</MudText>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                The file <code>~/.claude-mem/settings.json</code> (Linux/WSL) or
+                <code>%USERPROFILE%\.claude-mem\settings.json</code> (Windows) sets defaults for every
+                Claude Code session on that machine.
+            </MudText>
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1">WSL / Linux</MudText>
+            <MudPaper Outlined="true" Class="pa-3 mb-3" Style="background:#1e1e1e">
+                <pre style="color:#d4d4d4;margin:0;font-size:0.8rem">mkdir -p ~/.claude-mem
+cat > ~/.claude-mem/settings.json &lt;&lt; 'EOF'
+{
+  "CLAUDE_MEM_RUNTIME": "server-beta",
+  "CLAUDE_MEM_SERVER_BETA_URL": "http://&lt;SERVER_IP&gt;:37877",
+  "CLAUDE_MEM_SERVER_BETA_API_KEY": "cmem_YOUR_WSL_KEY",
+  "CLAUDE_MEM_SERVER_BETA_PROJECT_ID": "YOUR_GLOBAL_FALLBACK_PROJECT_ID"
+}
+EOF</pre>
+            </MudPaper>
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1">Windows PowerShell</MudText>
+            <MudPaper Outlined="true" Class="pa-3 mb-3" Style="background:#1e1e1e">
+                <pre style="color:#d4d4d4;margin:0;font-size:0.8rem">New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude-mem" | Out-Null
+@@{
+  CLAUDE_MEM_RUNTIME = "server-beta"
+  CLAUDE_MEM_SERVER_BETA_URL = "http://&lt;SERVER_IP&gt;:37877"
+  CLAUDE_MEM_SERVER_BETA_API_KEY = "cmem_YOUR_WINDOWS_KEY"
+  CLAUDE_MEM_SERVER_BETA_PROJECT_ID = "YOUR_GLOBAL_FALLBACK_PROJECT_ID"
+} | ConvertTo-Json | Set-Content "$env:USERPROFILE\.claude-mem\settings.json"</pre>
+            </MudPaper>
+
+            <MudAlert Severity="Severity.Info">
+                <code>CLAUDE_MEM_SERVER_BETA_PROJECT_ID</code> here is the <strong>fallback</strong> used
+                for any repo that does not have its own project ID override. Set it to the ID of your
+                global-fallback project.
+            </MudAlert>
+        </MudPaper>
+
+        <!-- PER-REPO CONFIG -->
+        <MudPaper id="per-repo-config" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Per-Repo Configuration</MudText>
+            <MudText Typo="Typo.body1" Class="mb-3">
+                To give a repository its own isolated memory context, override the project ID and API key
+                in that repo's Claude Code settings. Use two files:
+            </MudText>
+
+            <MudSimpleTable Dense="true" Bordered="true" Class="mb-4">
+                <thead>
+                    <tr><th>File</th><th>Committed?</th><th>Contains</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>.claude/settings.json</code></td>
+                        <td><MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Class="mr-1" />Yes</td>
+                        <td>The repo's Project ID (safe to commit — it's just an ID)</td>
+                    </tr>
+                    <tr>
+                        <td><code>.claude/settings.local.json</code></td>
+                        <td><MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" Class="mr-1" />No (gitignored)</td>
+                        <td>The machine-specific API key for this project</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1"><code>.claude/settings.json</code> (commit this)</MudText>
+            <MudPaper Outlined="true" Class="pa-3 mb-3" Style="background:#1e1e1e">
+                <pre style="color:#d4d4d4;margin:0;font-size:0.8rem">{
+  "env": {
+    "CLAUDE_MEM_SERVER_BETA_PROJECT_ID": "YOUR_REPO_SPECIFIC_PROJECT_ID"
+  }
+}</pre>
+            </MudPaper>
+
+            <MudText Typo="Typo.subtitle2" Class="mb-1"><code>.claude/settings.local.json</code> (do not commit)</MudText>
+            <MudPaper Outlined="true" Class="pa-3 mb-3" Style="background:#1e1e1e">
+                <pre style="color:#d4d4d4;margin:0;font-size:0.8rem">{
+  "env": {
+    "CLAUDE_MEM_SERVER_BETA_API_KEY": "cmem_YOUR_MACHINE_KEY_FOR_THIS_PROJECT"
+  }
+}</pre>
+            </MudPaper>
+
+            <MudAlert Severity="Severity.Info">
+                Claude Code merges all <code>env</code> entries and propagates them to the MCP server process.
+                The per-repo values take priority over <code>~/.claude-mem/settings.json</code>.
+                Each machine that uses this repo needs its own <code>settings.local.json</code> with
+                <em>its</em> key for the repo's project.
+            </MudAlert>
+        </MudPaper>
+
+        <!-- TROUBLESHOOTING -->
+        <MudPaper id="troubleshooting" Elevation="1" Class="pa-6 mb-4">
+            <MudText Typo="Typo.h5" GutterBottom="true">Troubleshooting</MudText>
+
+            <MudExpansionPanels>
+                <MudExpansionPanel Text='"API key is scoped to a different project" — 403 Forbidden'>
+                    <MudText Typo="Typo.body2" Class="mb-2">
+                        The key you're using was created for a different project than the one in
+                        <code>CLAUDE_MEM_SERVER_BETA_PROJECT_ID</code>. Fix by ensuring both values
+                        refer to the same project:
+                    </MudText>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.Check">
+                            Open the project in this UI → API Keys tab → confirm the key exists there.
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Check">
+                            Check <code>.claude/settings.local.json</code> — the API key must match a key from that exact project.
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Check">
+                            Check <code>.claude/settings.json</code> — the Project ID must match the project the key belongs to.
+                        </MudListItem>
+                    </MudList>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="Jobs stuck in queued state — waiting never drops to 0">
+                    <MudText Typo="Typo.body2">
+                        The BullMQ queue prefix mismatch bug: the worker is missing
+                        <code>CLAUDE_MEM_WORKER_PORT: "37877"</code> in its Docker environment.
+                        Add it to the <code>claude-mem-worker</code> service in <code>docker-compose.yml</code>
+                        and run <code>docker compose up -d claude-mem-worker</code>.
+                    </MudText>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="Observations not generating — jobs complete but nothing appears">
+                    <MudText Typo="Typo.body2">
+                        Check the worker's LLM provider is configured. Run
+                        <code>docker compose exec claude-mem-worker env | grep GEMINI</code>.
+                        If the key is missing, add <code>GEMINI_API_KEY=...</code> to <code>/opt/claude-mem/.env</code>
+                        and restart with <code>docker compose up -d</code>.
+                    </MudText>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="401 Unauthorized — Missing bearer API key">
+                    <MudText Typo="Typo.body2">
+                        The claude-mem server-beta API requires <code>Authorization: Bearer cmem_...</code>,
+                        not <code>X-API-Key</code>. Check your <code>CLAUDE_MEM_SERVER_BETA_API_KEY</code>
+                        value starts with <code>cmem_</code> and the URL points to the server port (37877),
+                        not the worker viewer port (37700).
+                    </MudText>
+                </MudExpansionPanel>
+
+                <MudExpansionPanel Text="Postgres startup failure — 'cannot be parsed as a URL'">
+                    <MudText Typo="Typo.body2">
+                        The Postgres password contains URL-unsafe characters (<code>+</code>, <code>/</code>,
+                        <code>=</code>) from a base64-generated password. Regenerate using hex:
+                        <code>openssl rand -hex 32</code>, update <code>.env</code>, then
+                        <code>docker compose down -v &amp;&amp; docker compose up -d</code>.
+                    </MudText>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
+        </MudPaper>
+
+    </MudItem>
+</MudGrid>

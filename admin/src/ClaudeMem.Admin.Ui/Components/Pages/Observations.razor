@@ -1,0 +1,21 @@
+@page "/observations"
+@inject NavigationManager Nav
+
+<PageTitle>Observations — ClaudeMem Admin</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Observations</MudText>
+
+<MudAlert Severity="Severity.Info" Class="mb-4">
+    Observations are scoped to projects. Open a project to browse its observations under the Observations tab.
+</MudAlert>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Groups"
+           OnClick="OnGoToTeamsButtonClicked">Go to Teams</MudButton>
+
+@code {
+    private void OnGoToTeamsButtonClicked()
+    {
+        Nav.NavigateTo("/teams");
+    }
+
+}

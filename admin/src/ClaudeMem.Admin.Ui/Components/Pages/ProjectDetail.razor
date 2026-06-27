@@ -1,0 +1,260 @@
+@page "/teams/{TeamId}/projects/{ProjectId}"
+@inject IProjectsClient Projects
+@inject IApiKeysClient ApiKeys
+@inject IObservationsClient Observations
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_project?.Name ?? "Project") — ClaudeMem Admin</PageTitle>
+
+<LoadStateView TData="Project" IsLoading="_loading" Data="_project" ErrorMessage="Project not found.">
+    <ChildContent Context="project">
+        <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-3" />
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+            <div>
+                <MudText Typo="Typo.h4">@project.Name</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@project.Id</MudText>
+            </div>
+        </MudStack>
+
+        <MudTabs Elevation="0" Rounded="false" KeepPanelsAlive="true">
+
+            <MudTabPanel Text="API Keys" Icon="@Icons.Material.Filled.Key">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">API Keys</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="OpenCreateKeyDialog">New Key</MudButton>
+                </MudStack>
+
+                <LoadStateView TData="ApiKeyPage" IsLoading="_apiKeysLoading" Data="_apiKeys"
+                               ErrorMessage="Could not load API keys.">
+                    <ChildContent Context="apiKeys">
+                        <MudTable Items="apiKeys.Items" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
+                            <HeaderContent>
+                                <MudTh Style="min-width:160px">Actor / Machine</MudTh>
+                                <MudTh Style="min-width:160px">Key ID</MudTh>
+                                <MudTh Style="min-width:110px">Created</MudTh>
+                                <MudTh Style="min-width:110px">Expires</MudTh>
+                                <MudTh Style="width:1%;white-space:nowrap"></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Actor">
+                                    <MudText Typo="Typo.body2">@context.ActorId</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Key ID">
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Id</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Created">
+                                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateOnly)</MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Expires">
+                                    <MudText Typo="Typo.body2">@(context.ExpiresAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateOnly) ?? "—")</MudText>
+                                </MudTd>
+                                <MudTd>
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Small"
+                                                   Color="Color.Error" OnClick="@(() => ConfirmDeleteKey(context))" />
+                                </MudTd>
+                            </RowTemplate>
+                            <NoRecordsContent>
+                                <MudText Class="pa-4 mud-text-secondary">No API keys. Create one for each machine that needs access to this project.</MudText>
+                            </NoRecordsContent>
+                        </MudTable>
+                    </ChildContent>
+                </LoadStateView>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Observations" Icon="@Icons.Material.Filled.Lightbulb">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">Observations</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchQuery" Label="Search" Variant="Variant.Outlined"
+                                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                                  AdornmentAriaLabel="Search observations"
+                                  OnAdornmentClick="SearchObservations"
+                                  @onkeydown="OnSearchKeyDown"
+                                  Margin="Margin.Dense" Style="max-width:320px" />
+                </MudStack>
+
+                <LoadStateView TData="ObservationPage" IsLoading="_observationsLoading" Data="_observations"
+                               ErrorMessage="Could not load observations.">
+                    <ChildContent Context="observations">
+                        @foreach (var observation in observations.Items)
+                        {
+                            <MudCard @key="observation.Id" Class="mb-2" Elevation="1">
+                                <MudCardContent Class="py-2">
+                                    <MudText Typo="Typo.body2" Style="white-space:pre-wrap">@observation.Content</MudText>
+                                    <MudText Typo="Typo.caption" Class="mud-text-secondary mt-1">
+                                        @observation.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateAndTime)
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        }
+
+                        @if (!observations.Items.Any())
+                        {
+                            <MudText Class="mud-text-secondary">No observations yet for this project.</MudText>
+                        }
+
+                        @if (observations.Next is not null)
+                        {
+                            <MudButton Class="mt-2" OnClick="LoadMoreObservations" Variant="Variant.Text">Load more</MudButton>
+                        }
+                    </ChildContent>
+                </LoadStateView>
+            </MudTabPanel>
+
+        </MudTabs>
+    </ChildContent>
+</LoadStateView>
+
+@code {
+    [CascadingParameter] private ProcessError? ProcessError { get; set; }
+
+    [Parameter] public string TeamId { get; set; } = string.Empty;
+    [Parameter] public string ProjectId { get; set; } = string.Empty;
+
+    private Project? _project;
+    private bool _loading = true;
+
+    private ApiKeyPage? _apiKeys;
+    private bool _apiKeysLoading = true;
+
+    private ObservationPage? _observations;
+    private bool _observationsLoading = true;
+    private string _searchQuery = string.Empty;
+
+    private readonly System.Collections.Generic.List<BreadcrumbItem> _breadcrumbs =
+    [
+        new BreadcrumbItem("Teams", href: "/teams"),
+        new BreadcrumbItem("", href: null),
+        new BreadcrumbItem("", href: null, disabled: true)
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _project = await Projects.ProjectsGetAsync(teamId: TeamId, projectId: ProjectId);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _loading = false;
+
+        if (_project is not null)
+        {
+            var teamHref = $"/teams/{TeamId}";
+            _breadcrumbs[1] = new BreadcrumbItem(TeamId, href: teamHref);
+            _breadcrumbs[2] = new BreadcrumbItem(_project.Name, href: null, disabled: true);
+        }
+
+        await Task.WhenAll(LoadApiKeys(), LoadObservations());
+        // Blazor re-renders automatically after the event callback completes; no StateHasChanged() needed here.
+    }
+
+    private async Task LoadApiKeys()
+    {
+        try
+        {
+            _apiKeys = await ApiKeys.ApiKeysGetAsync(TeamId, ProjectId);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _apiKeysLoading = false;
+    }
+
+    private async Task LoadObservations(string? cursor = null)
+    {
+        try
+        {
+            var searchQuery = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery;
+            _observations = await Observations.ObservationsAsync(TeamId, ProjectId, cursor: cursor, q: searchQuery);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _observationsLoading = false;
+    }
+
+    private async Task LoadMoreObservations()
+    {
+        if (_observations?.Next is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var cursor = CursorHelper.ExtractCursor(_observations.Next);
+            var searchQuery = string.IsNullOrWhiteSpace(_searchQuery) ? null : _searchQuery;
+            var nextPage = await Observations.ObservationsAsync(TeamId, ProjectId, cursor: cursor, q: searchQuery);
+            var allObservationItems = (_observations.Items as List<Observation>) ?? new List<Observation>(_observations.Items);
+            allObservationItems.AddRange(nextPage.Items);
+            _observations = new ObservationPage(nextPage.Self, _observations.First, nextPage.Next, allObservationItems);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+    }
+
+    private async Task SearchObservations()
+    {
+        _observationsLoading = true;
+        await LoadObservations();
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs keyboardArgs)
+    {
+        if (keyboardArgs.Key == "Enter")
+        {
+            await SearchObservations();
+        }
+    }
+
+    private async Task OpenCreateKeyDialog()
+    {
+        var parameters = new DialogParameters<CreateApiKeyDialog>
+        {
+            { x => x.TeamId, TeamId },
+            { x => x.ProjectId, ProjectId }
+        };
+        var createApiKeyDialogRef = await Dialogs.ShowAsync<CreateApiKeyDialog>("New API Key", parameters);
+        var createApiKeyDialogResult = await createApiKeyDialogRef.Result;
+        var createApiKeyDialogResultIsNotCancelled = createApiKeyDialogResult is not null && !createApiKeyDialogResult.Canceled;
+        if (createApiKeyDialogResultIsNotCancelled)
+        {
+            await LoadApiKeys();
+            // Blazor re-renders automatically after the event callback completes; no StateHasChanged() needed here.
+        }
+    }
+
+    private async Task ConfirmDeleteKey(ApiKey apiKey)
+    {
+        var confirmed = await Dialogs.ShowMessageBoxAsync(
+            "Revoke API Key",
+            $"Revoke key for '{apiKey.ActorId}'? This cannot be undone.",
+            yesText: "Revoke", cancelText: "Cancel");
+
+        if (confirmed is true)
+        {
+            try
+            {
+                await ApiKeys.ApiKeysDeleteAsync(TeamId, ProjectId, apiKey.Id!);
+                Snackbar.Add("API key revoked.", Severity.Success);
+                await LoadApiKeys();
+                // Blazor re-renders automatically after the event callback completes; no StateHasChanged() needed here.
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ApiExceptionHelper.GetUserMessage(ex), Severity.Error);
+            }
+        }
+    }
+}

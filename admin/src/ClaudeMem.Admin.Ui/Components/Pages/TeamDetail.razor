@@ -1,0 +1,171 @@
+@page "/teams/{TeamId}"
+@inject ITeamsClient Teams
+@inject IProjectsClient Projects
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@(_team?.Name ?? "Team") — ClaudeMem Admin</PageTitle>
+
+<LoadStateView TData="Team" IsLoading="_loading" Data="_team" ErrorMessage="Team not found.">
+    <ChildContent Context="team">
+        <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-3" />
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+            <div>
+                <MudText Typo="Typo.h4">@team.Name</MudText>
+                <MudText Typo="Typo.caption" Class="mud-text-secondary">@team.Id</MudText>
+            </div>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateProjectDialog">New Project</MudButton>
+        </MudStack>
+
+        <MudText Typo="Typo.h6" Class="mb-2">Projects</MudText>
+
+        <LoadStateView TData="ProjectPage" IsLoading="_projectsLoading" Data="_projects"
+                       ErrorMessage="Could not load projects.">
+            <ChildContent Context="projects">
+                <MudTable Items="projects.Items" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm"
+                          OnRowClick="@(EventCallback.Factory.Create<TableRowClickEventArgs<Project>>(this, NavigateToProject))"
+                          RowClass="cursor-pointer">
+                    <HeaderContent>
+                        <MudTh Style="min-width:180px">Name</MudTh>
+                        <MudTh Style="min-width:180px">ID</MudTh>
+                        <MudTh Style="min-width:80px">API Keys</MudTh>
+                        <MudTh Style="min-width:100px">Observations</MudTh>
+                        <MudTh Style="width:1%;white-space:nowrap"></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name">
+                            <MudText Typo="Typo.body2"><b>@context.Name</b></MudText>
+                        </MudTd>
+                        <MudTd DataLabel="ID">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Id</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="API Keys">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@(context.ApiKeyCount?.ToString() ?? "—")</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Observations">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@(context.ObservationCount?.ToString() ?? "—")</MudChip>
+                        </MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"
+                                           Href="@($"/teams/{TeamId}/projects/{context.Id}")" />
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Class="pa-4 mud-text-secondary">No projects yet. Create a project to start scoping memory.</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+
+                @if (projects.Next is not null)
+                {
+                    <MudButton Class="mt-2" OnClick="LoadMoreProjects" Variant="Variant.Text">Load more</MudButton>
+                }
+            </ChildContent>
+        </LoadStateView>
+    </ChildContent>
+</LoadStateView>
+
+@code {
+    [CascadingParameter] private ProcessError? ProcessError { get; set; }
+
+    [Parameter] public string TeamId { get; set; } = string.Empty;
+
+    private Team? _team;
+    private ProjectPage? _projects;
+    private bool _loading = true;
+    private bool _projectsLoading = true;
+
+    private readonly System.Collections.Generic.List<BreadcrumbItem> _breadcrumbs =
+    [
+        new BreadcrumbItem("Teams", href: "/teams"),
+        new BreadcrumbItem("", href: null, disabled: true)
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadTeam(), LoadProjectDetails());
+    }
+
+    private async Task LoadTeam()
+    {
+        try
+        {
+            _team = await Teams.TeamsGetAsync(teamId: TeamId);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _loading = false;
+
+        if (_team is not null)
+        {
+            _breadcrumbs[1] = new BreadcrumbItem(_team.Name, href: null, disabled: true);
+        }
+    }
+
+    private async Task LoadProjectDetails()
+    {
+        try
+        {
+            _projects = await Projects.ProjectsGetAsync(TeamId);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+        _projectsLoading = false;
+    }
+
+    private async Task LoadMoreProjects()
+    {
+        if (_projects?.Next is null)
+        {
+            return;
+        }
+
+        ProjectPage? nextPage;
+        try
+        {
+            var cursor = CursorHelper.ExtractCursor(_projects.Next);
+            nextPage = await Projects.ProjectsGetAsync(TeamId, cursor: cursor);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+            return;
+        }
+
+        var allProjectItems = (_projects.Items as List<Project>) ?? new List<Project>(_projects.Items);
+        allProjectItems.AddRange(nextPage.Items);
+        _projects = new ProjectPage(nextPage.Self, _projects.First, nextPage.Next, allProjectItems);
+    }
+
+    private void NavigateToProject(TableRowClickEventArgs<Project> args)
+    {
+        if (args.Item?.Id is not null)
+        {
+            Nav.NavigateTo($"/teams/{TeamId}/projects/{args.Item.Id}");
+        }
+    }
+
+    private async Task OpenCreateProjectDialog()
+    {
+        var parameters = new DialogParameters<CreateProjectDialog>
+        {
+            { x => x.TeamId, TeamId }
+        };
+        var createProjectDialogRef = await Dialogs.ShowAsync<CreateProjectDialog>("New Project", parameters);
+        var createProjectDialogResult = await createProjectDialogRef.Result;
+        var createProjectDialogResultIsNotCancelled = createProjectDialogResult is not null && !createProjectDialogResult.Canceled;
+        var createdProject = createProjectDialogResult?.Data as Project;
+        if (createProjectDialogResultIsNotCancelled && createdProject is not null)
+        {
+            Snackbar.Add($"Project '{createdProject.Name}' created.", Severity.Success);
+            Nav.NavigateTo($"/teams/{TeamId}/projects/{createdProject.Id}");
+        }
+    }
+}

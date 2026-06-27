@@ -1,0 +1,153 @@
+@page "/jobs"
+@inject IJobsClient JobsClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Jobs — ClaudeMem Admin</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+    <MudText Typo="Typo.h4">Jobs</MudText>
+    <MudSpacer />
+    <MudSelect T="string" Value="_statusFilter" ValueChanged="OnStatusChanged"
+               Label="Status" Variant="Variant.Outlined" Margin="Margin.Dense" Style="max-width:160px">
+        <MudSelectItem T="string" Value="@("")">All</MudSelectItem>
+        <MudSelectItem T="string" Value="@(AdminUiConstants.JobStatus.Queued)">Queued</MudSelectItem>
+        <MudSelectItem T="string" Value="@(AdminUiConstants.JobStatus.Processing)">Processing</MudSelectItem>
+        <MudSelectItem T="string" Value="@(AdminUiConstants.JobStatus.Completed)">Completed</MudSelectItem>
+        <MudSelectItem T="string" Value="@(AdminUiConstants.JobStatus.Failed)">Failed</MudSelectItem>
+        <MudSelectItem T="string" Value="@(AdminUiConstants.JobStatus.Cancelled)">Cancelled</MudSelectItem>
+    </MudSelect>
+</MudStack>
+
+<LoadStateView TData="JobPage" IsLoading="_loading" Data="_jobs" ErrorMessage="Could not load jobs.">
+    <ChildContent Context="jobs">
+        <MudTable Items="jobs.Items" Hover="true" Dense="true" Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh Style="min-width:160px">Job ID</MudTh>
+                <MudTh Style="min-width:140px">Project</MudTh>
+                <MudTh Style="min-width:90px">Status</MudTh>
+                <MudTh Style="min-width:140px">Created</MudTh>
+                <MudTh Style="min-width:140px">Completed / Failed</MudTh>
+                <MudTh Style="width:1%;white-space:nowrap"></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Job ID">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Id</MudText>
+                </MudTd>
+                <MudTd DataLabel="Project">
+                    <MudText Typo="Typo.caption">@(context.ProjectId ?? "—")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@context.Status</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Created">
+                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateAndTime)</MudText>
+                </MudTd>
+                <MudTd DataLabel="Completed/Failed">
+                    <MudText Typo="Typo.body2">
+                        @((context.CompletedAt ?? context.FailedAt)?.LocalDateTime.ToString(AdminUiConstants.Formats.DateAndTime) ?? "—")
+                    </MudText>
+                </MudTd>
+                <MudTd>
+                    @if (context.Status == AdminUiConstants.JobStatus.Failed)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Replay" Size="Size.Small"
+                                       Color="Color.Warning"
+                                       OnClick="@(() => RetryJob(context))" />
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4 mud-text-secondary">No jobs match the current filter.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+
+        @if (jobs.Next is not null)
+        {
+            <MudButton Class="mt-2" OnClick="LoadMore" Variant="Variant.Text">Load more</MudButton>
+        }
+    </ChildContent>
+</LoadStateView>
+
+@code {
+    [CascadingParameter] private ProcessError? ProcessError { get; set; }
+
+    private JobPage? _jobs;
+    private bool _loading = true;
+    private string _statusFilter = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Reload();
+    }
+
+    private async Task OnStatusChanged(string selectedStatus)
+    {
+        _statusFilter = selectedStatus;
+        await Reload();
+    }
+
+    private async Task Reload()
+    {
+        _loading = true;
+        try
+        {
+            var statusFilter = string.IsNullOrEmpty(_statusFilter) ? null : _statusFilter;
+            _jobs = await JobsClient.JobsAsync(status: statusFilter);
+        }
+        catch (Exception ex)
+        {
+            _jobs = null;
+            ProcessError?.HandleError(ex);
+        }
+        _loading = false;
+    }
+
+    private async Task LoadMore()
+    {
+        if (_jobs?.Next is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var cursor = CursorHelper.ExtractCursor(_jobs.Next);
+            var statusFilter = string.IsNullOrEmpty(_statusFilter) ? null : _statusFilter;
+            var nextPage = await JobsClient.JobsAsync(cursor: cursor, status: statusFilter);
+            var allJobItems = (_jobs.Items as List<Job>) ?? new List<Job>(_jobs.Items);
+            allJobItems.AddRange(nextPage.Items);
+            _jobs = new JobPage(nextPage.Self, _jobs.First, nextPage.Next, allJobItems);
+        }
+        catch (Exception ex)
+        {
+            ProcessError?.HandleError(ex);
+        }
+    }
+
+    private async Task RetryJob(Job job)
+    {
+        try
+        {
+            await JobsClient.RetryAsync(job.Id!);
+            Snackbar.Add("Job queued for retry.", Severity.Success);
+            await Reload();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ApiExceptionHelper.GetUserMessage(ex), Severity.Error);
+        }
+    }
+
+    private static Color StatusColor(string? status)
+    {
+        return status switch
+        {
+            AdminUiConstants.JobStatus.Completed => Color.Success,
+            AdminUiConstants.JobStatus.Failed => Color.Error,
+            AdminUiConstants.JobStatus.Processing => Color.Info,
+            AdminUiConstants.JobStatus.Queued => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+}
