@@ -242,6 +242,26 @@ public sealed class ApiKeysTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateApiKey_ProducesAuditLogEntry()
+    {
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+
+        var created = await _apiKeys.ApiKeysPostAsync(new ApiKey(null, null, "audit-actor", null, null), teamId, projectId, TestContext.Current.CancellationToken);
+
+        var auditEntry = await _db.ReadLastAuditLogEntry("api_key", "api_key.create");
+
+        using var scope = new AssertionScope();
+        auditEntry.Should().NotBeNull();
+        auditEntry.Action.Should().Be("api_key.create");
+        auditEntry.ResourceType.Should().Be("api_key");
+        auditEntry.ResourceId.Should().Be(created.Id);
+        auditEntry.TeamId.Should().Be(teamId);
+        auditEntry.ProjectId.Should().Be(projectId);
+        auditEntry.ApiKeyId.Should().Be(created.Id);
+    }
+
+    [Fact]
     public async Task CreateApiKey_WithoutApiKey_Returns401()
     {
         var apiKey = new ApiKey(null, null, "test-actor", null, null);
@@ -317,5 +337,25 @@ public sealed class ApiKeysTests : IAsyncLifetime
 
         response.Should().NotBeNull();
         response.Should().HaveStatusCode(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteApiKey_ProducesAuditLogEntry()
+    {
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var keyId = await _db.InsertApiKey(teamId, projectId, "revoke-actor");
+
+        await _apiKeys.ApiKeysDeleteAsync(teamId, projectId, keyId, TestContext.Current.CancellationToken);
+
+        var auditEntry = await _db.ReadLastAuditLogEntry("api_key", "api_key.revoke");
+
+        using var scope = new AssertionScope();
+        auditEntry.Should().NotBeNull();
+        auditEntry.Action.Should().Be("api_key.revoke");
+        auditEntry.ResourceType.Should().Be("api_key");
+        auditEntry.ResourceId.Should().Be(keyId);
+        auditEntry.TeamId.Should().Be(teamId);
+        auditEntry.ProjectId.Should().Be(projectId);
     }
 }

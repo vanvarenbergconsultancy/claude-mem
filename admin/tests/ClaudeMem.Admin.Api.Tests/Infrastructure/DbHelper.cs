@@ -108,4 +108,47 @@ internal sealed class DbHelper
             "UPDATE api_keys SET revoked_at = NOW(), updated_at = NOW() WHERE id = @KeyId",
             new { KeyId = keyId });
     }
+
+    public async Task<string> InsertAuditLogEntry(
+        string? teamId = null,
+        string? projectId = null,
+        string? actorId = "test-actor",
+        string? apiKeyId = null,
+        string action = "test.action",
+        string resourceType = "test",
+        string? resourceId = null,
+        string details = "{}")
+    {
+        var id = Guid.NewGuid().ToString();
+
+        await using var connection = CreateConnection();
+
+        await connection.ExecuteAsync(
+            "INSERT INTO audit_log (id, team_id, project_id, actor_id, api_key_id, action, resource_type, resource_id, details, created_at) VALUES (@Id, @TeamId, @ProjectId, @ActorId, @ApiKeyId, @Action, @ResourceType, @ResourceId, @Details::jsonb, NOW())",
+            new { Id = id, TeamId = teamId, ProjectId = projectId, ActorId = actorId, ApiKeyId = apiKeyId, Action = action, ResourceType = resourceType, ResourceId = resourceId, Details = details });
+
+        return id;
+    }
+
+    public async Task<AuditLogDbRow?> ReadLastAuditLogEntry(string resourceType, string action)
+    {
+        await using var connection = CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<AuditLogDbRow>(
+            """
+            SELECT
+                id,
+                team_id AS teamid,
+                project_id AS projectid,
+                actor_id AS actorid,
+                api_key_id AS apikeyid,
+                action,
+                resource_type AS resourcetype,
+                resource_id AS resourceid
+            FROM audit_log
+            WHERE resource_type = @ResourceType AND action = @Action
+            ORDER BY created_at DESC LIMIT 1
+            """,
+            new { ResourceType = resourceType, Action = action });
+    }
 }

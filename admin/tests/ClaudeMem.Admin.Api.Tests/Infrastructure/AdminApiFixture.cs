@@ -106,6 +106,9 @@ public sealed class AdminApiFixture : WebApplicationFactory<Program>, IAsyncLife
     private IJobsClient? _jobsClient;
     public IJobsClient JobsClient => _jobsClient ??= Services.GetRequiredService<IJobsClient>();
 
+    private IAuditLogClient? _auditLogClient;
+    public IAuditLogClient AuditLogClient => _auditLogClient ??= Services.GetRequiredService<IAuditLogClient>();
+
     public HttpClient CreateAuthenticatedClient()
     {
         if (_authenticatedClient is not null)

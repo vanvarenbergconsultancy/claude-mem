@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using ClaudeMem.Admin.Api.Features.AuditLog;
 using ClaudeMem.Admin.Api.Features.Teams;
 using ClaudeMem.Admin.Api.Contracts;
 using ClaudeMem.Admin.Api.Infrastructure.Results;
@@ -12,11 +13,13 @@ internal sealed class CreateProjectHandler : ICommandHandler<CreateProjectComman
 {
     private readonly IProjectAccess _projectAccess;
     private readonly ITeamAccess _teamAccess;
+    private readonly IAuditLogAccess _auditLog;
 
-    public CreateProjectHandler(IProjectAccess projectAccess, ITeamAccess teamAccess)
+    public CreateProjectHandler(IProjectAccess projectAccess, ITeamAccess teamAccess, IAuditLogAccess auditLog)
     {
         _projectAccess = projectAccess;
         _teamAccess = teamAccess;
+        _auditLog = auditLog;
     }
 
     public async ValueTask<Result<Project>> Handle(CreateProjectCommand command, CancellationToken cancellationToken)
@@ -28,6 +31,13 @@ internal sealed class CreateProjectHandler : ICommandHandler<CreateProjectComman
         }
 
         var createdProject = await _projectAccess.CreateProject(command.TeamId, command.Name, cancellationToken);
+
+        await _auditLog.WriteEntry(new AuditLogWriteData(
+            Action: "project.create",
+            ResourceType: "project",
+            ResourceId: createdProject.Id!,
+            TeamId: command.TeamId,
+            ProjectId: createdProject.Id), cancellationToken);
 
         return Result.Ok(createdProject);
     }

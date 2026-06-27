@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using ClaudeMem.Admin.Api.Features.AuditLog;
 using ClaudeMem.Admin.Api.Features.Projects.Shared;
 using ClaudeMem.Admin.Api.Infrastructure.Results;
 using Mediator;
@@ -11,11 +12,13 @@ internal sealed class DeleteApiKeyHandler : ICommandHandler<DeleteApiKeyCommand,
 {
     private readonly IApiKeyAccess _apiKeyAccess;
     private readonly IProjectAccess _projectAccess;
+    private readonly IAuditLogAccess _auditLog;
 
-    public DeleteApiKeyHandler(IApiKeyAccess apiKeyAccess, IProjectAccess projectAccess)
+    public DeleteApiKeyHandler(IApiKeyAccess apiKeyAccess, IProjectAccess projectAccess, IAuditLogAccess auditLog)
     {
         _apiKeyAccess = apiKeyAccess;
         _projectAccess = projectAccess;
+        _auditLog = auditLog;
     }
 
     public async ValueTask<Result<Unit>> Handle(DeleteApiKeyCommand command, CancellationToken cancellationToken)
@@ -33,6 +36,14 @@ internal sealed class DeleteApiKeyHandler : ICommandHandler<DeleteApiKeyCommand,
         }
 
         await _apiKeyAccess.RevokeApiKeyById(command.KeyId, cancellationToken);
+
+        await _auditLog.WriteEntry(new AuditLogWriteData(
+            Action: "api_key.revoke",
+            ResourceType: "api_key",
+            ResourceId: command.KeyId,
+            TeamId: command.TeamId,
+            ProjectId: command.ProjectId,
+            ApiKeyId: command.KeyId), cancellationToken);
 
         return Result.Ok(Unit.Value);
     }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ClaudeMem.Admin.Api.Contracts;
+using ClaudeMem.Admin.Api.Features.AuditLog;
 using ClaudeMem.Admin.Api.Infrastructure.Results;
 using Mediator;
 using ClaudeMem.Admin.Api.Features.Projects.Shared;
@@ -15,11 +16,13 @@ internal sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand,
 {
     private readonly IApiKeyAccess _apiKeyAccess;
     private readonly IProjectAccess _projectAccess;
+    private readonly IAuditLogAccess _auditLog;
 
-    public CreateApiKeyHandler(IApiKeyAccess apiKeyAccess, IProjectAccess projectAccess)
+    public CreateApiKeyHandler(IApiKeyAccess apiKeyAccess, IProjectAccess projectAccess, IAuditLogAccess auditLog)
     {
         _apiKeyAccess = apiKeyAccess;
         _projectAccess = projectAccess;
+        _auditLog = auditLog;
     }
 
     public async ValueTask<Result<NewApiKey>> Handle(CreateApiKeyCommand command, CancellationToken cancellationToken)
@@ -30,11 +33,20 @@ internal sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand,
         {
             return Result.Fail<NewApiKey>(teamDoesNotHaveAccessToProjectError.Value.AsError());
         }
-        
+
         var plaintextKey = GenerateSecureRandomKey();
         var hashedKey = ComputeSha256Hash(plaintextKey);
 
         var insertedApiKey = await _apiKeyAccess.InsertApiKey(command.TeamId, command.ProjectId, command.ActorId, hashedKey, cancellationToken);
+
+        await _auditLog.WriteEntry(new AuditLogWriteData(
+            Action: "api_key.create",
+            ResourceType: "api_key",
+            ResourceId: insertedApiKey.Id,
+            TeamId: command.TeamId,
+            ProjectId: command.ProjectId,
+            ActorId: command.ActorId,
+            ApiKeyId: insertedApiKey.Id), cancellationToken);
 
         return Result.Ok(new NewApiKey(insertedApiKey.Id, insertedApiKey.ActorId, plaintextKey, insertedApiKey.CreatedAt));
     }

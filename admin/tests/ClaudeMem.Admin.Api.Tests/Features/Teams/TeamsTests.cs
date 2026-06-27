@@ -186,6 +186,20 @@ public sealed class TeamsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CreateTeam_ProducesAuditLogEntry()
+    {
+        var response = await _teams.TeamsPostAsync(new Team(null, "Audit Test Team", null, null), TestContext.Current.CancellationToken);
+
+        var auditEntry = await _db.ReadLastAuditLogEntry("team", "team.create");
+
+        using var scope = new AssertionScope();
+        auditEntry.Should().NotBeNull();
+        auditEntry.Action.Should().Be("team.create");
+        auditEntry.ResourceType.Should().Be("team");
+        auditEntry.ResourceId.Should().Be(response.Id);
+    }
+
+    [Fact]
     public async Task CreateTeam_EmptyName_Returns422()
     {
         var act = async () => await _teams.TeamsPostAsync(new Team(null, "", null, null), TestContext.Current.CancellationToken);

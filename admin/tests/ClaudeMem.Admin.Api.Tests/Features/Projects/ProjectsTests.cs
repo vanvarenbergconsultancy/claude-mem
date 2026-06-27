@@ -199,6 +199,20 @@ public sealed class ProjectsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetProject_RevokedApiKeysNotCounted()
+    {
+        var teamId = await _db.InsertTeam();
+        var projectId = await _db.InsertProject(teamId);
+        var keyId = await _db.InsertApiKey(teamId, projectId);
+        await _db.RevokeApiKey(keyId);
+
+        var project = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
+
+        project.Should().NotBeNull();
+        project.ApiKeyCount.Should().Be(0);
+    }
+
+    [Fact]
     public async Task GetProjectById_WithoutApiKey_Returns401()
     {
         var response = await _fixture.GetUnauthenticated(EndpointProjectById("some-team", "some-id"), TestContext.Current.CancellationToken);
@@ -301,16 +315,19 @@ public sealed class ProjectsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GetProject_RevokedApiKeysNotCounted()
+    public async Task CreateProject_ProducesAuditLogEntry()
     {
         var teamId = await _db.InsertTeam();
-        var projectId = await _db.InsertProject(teamId);
-        var keyId = await _db.InsertApiKey(teamId, projectId);
-        await _db.RevokeApiKey(keyId);
 
-        var project = await _projects.ProjectsGetAsync(teamId, projectId, TestContext.Current.CancellationToken);
+        var response = await _projects.ProjectsPostAsync(new Project(null, null, "Audit Test Project", null, null, null), teamId, TestContext.Current.CancellationToken);
 
-        project.Should().NotBeNull();
-        project.ApiKeyCount.Should().Be(0);
+        var auditEntry = await _db.ReadLastAuditLogEntry("project", "project.create");
+
+        using var scope = new AssertionScope();
+        auditEntry.Should().NotBeNull();
+        auditEntry.Action.Should().Be("project.create");
+        auditEntry.ResourceType.Should().Be("project");
+        auditEntry.ResourceId.Should().Be(response.Id);
+        auditEntry.TeamId.Should().Be(teamId);
     }
 }
