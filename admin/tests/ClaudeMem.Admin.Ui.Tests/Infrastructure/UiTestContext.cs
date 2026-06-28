@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using Bunit;
 using ClaudeMem.Admin.Api.Contracts;
+using ClaudeMem.Admin.Ui.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor;
@@ -64,6 +65,30 @@ public abstract class UiTestContext : BunitContext, IAsyncLifetime
         Services.AddSingleton(client);
 
         return client;
+    }
+
+    protected ITeamCacheService SetupTeamCacheService()
+    {
+        var service = Substitute.For<ITeamCacheService>();
+        Services.AddSingleton(service);
+
+        return service;
+    }
+
+    protected IProjectCacheService SetupProjectCacheService()
+    {
+        var service = Substitute.For<IProjectCacheService>();
+        Services.AddSingleton(service);
+
+        return service;
+    }
+
+    protected ICacheInvalidationBus SetupCacheInvalidationBus()
+    {
+        var bus = Substitute.For<ICacheInvalidationBus>();
+        Services.AddSingleton(bus);
+
+        return bus;
     }
 
     protected IAuditLogClient SetupAuditLogClient()

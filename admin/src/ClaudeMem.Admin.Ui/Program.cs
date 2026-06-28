@@ -34,6 +34,11 @@ builder.Services.AddAdminApiClients(
     builder.Configuration["AdminApi:BaseUrl"]!,
     builder.Configuration["AdminApi:ApiKey"]!);
 
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheInvalidationBus, CacheInvalidationBus>();
+builder.Services.AddSingleton<ITeamCacheService, TeamCacheService>();
+builder.Services.AddSingleton<IProjectCacheService, ProjectCacheService>();
+
 if (builder.Environment.IsEnvironment("Local"))
 {
     builder.WebHost.UseStaticWebAssets();
