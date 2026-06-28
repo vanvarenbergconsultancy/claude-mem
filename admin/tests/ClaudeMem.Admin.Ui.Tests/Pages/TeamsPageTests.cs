@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using Bunit;
 using ClaudeMem.Admin.Api.Contracts;
+using ClaudeMem.Admin.Ui.Components.Dialogs;
 using ClaudeMem.Admin.Ui.Components.Pages;
+using ClaudeMem.Admin.Ui.Services;
 using ClaudeMem.Admin.Ui.Tests.Infrastructure;
 using MudBlazor;
 using NSubstitute;
@@ -27,10 +29,17 @@ public sealed class TeamsPageTests : UiTestContext
         return new TeamPage(BaseUri, BaseUri, next, items);
     }
 
+    private (ITeamsClient teamsClient, ITeamCacheService teamCacheService) Setup()
+    {
+        var teamCacheService = SetupTeamCacheService();
+        var teamsClient = SetupTeamsClient();
+        return (teamsClient, teamCacheService);
+    }
+
     [Fact]
     public void Api_Returns_Error_Shows_Error_Alert()
     {
-        var teamsClient = SetupTeamsClient();
+        var (teamsClient, _) = Setup();
         teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
                    .Returns<TeamPage>(_ => throw new ApiException("error", 500, null,
                        new Dictionary<string, IEnumerable<string>>(StringComparer.Ordinal), null));
@@ -43,7 +52,7 @@ public sealed class TeamsPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Empty_List_Shows_No_Teams_Message()
     {
-        var teamsClient = SetupTeamsClient();
+        var (teamsClient, _) = Setup();
         teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(EmptyTeamPage()));
 
@@ -55,7 +64,7 @@ public sealed class TeamsPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Teams_Shows_Team_Names()
     {
-        var teamsClient = SetupTeamsClient();
+        var (teamsClient, _) = Setup();
         var team = new Team("t1", "Alpha Team", DateTimeOffset.UtcNow, null);
         teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(TeamPageWithItems(new List<Team> { team })));
@@ -68,7 +77,7 @@ public sealed class TeamsPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Next_Shows_LoadMore_Button()
     {
-        var teamsClient = SetupTeamsClient();
+        var (teamsClient, _) = Setup();
         var team = new Team("t1", "Alpha Team", DateTimeOffset.UtcNow, null);
         var nextPageUri = new Uri("https://api.example.com/teams?page_size=20&cursor=abc123");
         teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
@@ -82,7 +91,7 @@ public sealed class TeamsPageTests : UiTestContext
     [Fact]
     public void Api_Returns_No_Next_Hides_LoadMore_Button()
     {
-        var teamsClient = SetupTeamsClient();
+        var (teamsClient, _) = Setup();
         var team = new Team("t1", "Alpha Team", DateTimeOffset.UtcNow, null);
         teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(TeamPageWithItems(new List<Team> { team })));
@@ -90,5 +99,27 @@ public sealed class TeamsPageTests : UiTestContext
         var teamsPage = Render<Teams>();
 
         teamsPage.Markup.Should().NotContain("Load more");
+    }
+
+    [Fact]
+    public async Task CreateTeam_Dialog_Success_InvalidatesTeamCache()
+    {
+        var (teamsClient, teamCacheService) = Setup();
+        teamsClient.TeamsGetAsync(Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<CancellationToken>())
+                   .Returns(Task.FromResult(EmptyTeamPage()));
+
+        var createdTeam = new Team("t1", "New Team", DateTimeOffset.UtcNow, null);
+        var dialogRef = Substitute.For<IDialogReference>();
+        dialogRef.Result.Returns(Task.FromResult<DialogResult?>(DialogResult.Ok(createdTeam)));
+
+        var dialogService = SetupMockedDialogService();
+        dialogService.ShowAsync<CreateTeamDialog>(Arg.Any<string>())
+                     .Returns(Task.FromResult(dialogRef));
+
+        var teamsPage = Render<Teams>();
+        await teamsPage.Find(".mud-button-filled-primary").ClickAsync();
+        await Task.Delay(100);
+
+        teamCacheService.Received(1).Invalidate(Arg.Any<CancellationToken>());
     }
 }

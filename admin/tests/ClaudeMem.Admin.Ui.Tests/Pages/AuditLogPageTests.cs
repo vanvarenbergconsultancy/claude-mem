@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Bunit;
 using ClaudeMem.Admin.Api.Contracts;
 using ClaudeMem.Admin.Ui.Components.Pages;
+using ClaudeMem.Admin.Ui.Services;
 using ClaudeMem.Admin.Ui.Tests.Infrastructure;
 using MudBlazor;
 using NSubstitute;
@@ -32,10 +33,22 @@ public sealed class AuditLogPageTests : UiTestContext
         return new AuditLogEntry(id, null, null, null, null, null, null, action, resourceType, null, null, DateTimeOffset.UtcNow);
     }
 
+    private IAuditLogClient SetupWithCacheMocks()
+    {
+        var teamCacheService = SetupTeamCacheService();
+        teamCacheService.GetAll(Arg.Any<CancellationToken>())
+                        .Returns(Task.FromResult<IReadOnlyList<Team>>(Array.Empty<Team>()));
+        var projectCacheService = SetupProjectCacheService();
+        projectCacheService.GetForTeam(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                           .Returns(Task.FromResult<IReadOnlyList<Project>>(Array.Empty<Project>()));
+        SetupCacheInvalidationBus();
+        return SetupAuditLogClient();
+    }
+
     [Fact]
     public void Api_Returns_Error_Shows_Error_Alert()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),
                           Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -51,7 +64,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Empty_List_Shows_No_Entries_Message()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),
                           Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -66,7 +79,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Entries_Shows_Action_Column()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         var entry = MakeEntry(action: "project.created");
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -82,7 +95,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void Api_Returns_Next_Shows_LoadMore_Button()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         var entry = MakeEntry();
         var nextPageUri = new Uri("https://api.example.com/audit-log?page_size=20&cursor=abc123");
         auditLogClient.AuditLogAsync(
@@ -99,7 +112,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void Api_Returns_No_Next_Hides_LoadMore_Button()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         var entry = MakeEntry();
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -115,7 +128,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void ClickRow_Shows_Detail_Panel()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         var entry = MakeEntry();
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),
@@ -132,7 +145,7 @@ public sealed class AuditLogPageTests : UiTestContext
     [Fact]
     public void ClickSameRow_Again_Hides_Detail_Panel()
     {
-        var auditLogClient = SetupAuditLogClient();
+        var auditLogClient = SetupWithCacheMocks();
         var entry = MakeEntry();
         auditLogClient.AuditLogAsync(
                           Arg.Any<string?>(), Arg.Any<int?>(), Arg.Any<string?>(), Arg.Any<string?>(),

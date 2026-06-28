@@ -1,5 +1,6 @@
 @page "/teams"
 @inject ITeamsClient TeamsClient
+@inject ITeamCacheService TeamCache
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
@@ -112,6 +113,7 @@
         var createdTeam = createTeamDialogResult?.Data as Team;
         if (createTeamDialogResultIsNotCancelled && createdTeam is not null)
         {
+            TeamCache.Invalidate(CancellationToken.None);
             Snackbar.Add($"Team '{createdTeam.Name}' created.", Severity.Success);
             Nav.NavigateTo($"/teams/{createdTeam.Id}");
         }

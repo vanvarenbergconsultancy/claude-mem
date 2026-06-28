@@ -1,6 +1,7 @@
 @page "/teams/{TeamId}"
 @inject ITeamsClient Teams
 @inject IProjectsClient Projects
+@inject IProjectCacheService ProjectCache
 @inject IDialogService Dialogs
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
@@ -164,6 +165,7 @@
         var createdProject = createProjectDialogResult?.Data as Project;
         if (createProjectDialogResultIsNotCancelled && createdProject is not null)
         {
+            ProjectCache.InvalidateForTeam(TeamId, CancellationToken.None);
             Snackbar.Add($"Project '{createdProject.Name}' created.", Severity.Success);
             Nav.NavigateTo($"/teams/{TeamId}/projects/{createdProject.Id}");
         }

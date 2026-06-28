@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using AwesomeAssertions;
 using Bunit;
 using ClaudeMem.Admin.Api.Contracts;
+using ClaudeMem.Admin.Ui.Components.Dialogs;
 using ClaudeMem.Admin.Ui.Components.Pages;
+using ClaudeMem.Admin.Ui.Services;
 using ClaudeMem.Admin.Ui.Tests.Infrastructure;
 using MudBlazor;
 using NSubstitute;
@@ -33,6 +35,14 @@ public sealed class TeamDetailPageTests : UiTestContext
         return new ApiException("error", 500, null, new Dictionary<string, IEnumerable<string>>(StringComparer.Ordinal), null);
     }
 
+    private (ITeamsClient teamsClient, IProjectsClient projectsClient, IProjectCacheService projectCacheService) Setup()
+    {
+        var projectCacheService = SetupProjectCacheService();
+        var teamsClient = SetupTeamsClient();
+        var projectsClient = SetupProjectsClient();
+        return (teamsClient, projectsClient, projectCacheService);
+    }
+
     private static void SetupSuccessfulProjectsList(IProjectsClient projectsClient)
     {
         projectsClient.ProjectsGetAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<int?>(),
@@ -48,8 +58,7 @@ public sealed class TeamDetailPageTests : UiTestContext
     [Fact]
     public void Team_Load_Fails_Shows_Error_Alert()
     {
-        var teamsClient = SetupTeamsClient();
-        var projectsClient = SetupProjectsClient();
+        var (teamsClient, projectsClient, _) = Setup();
 
         teamsClient.TeamsGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                    .Returns<Team>(_ => throw ServerError());
@@ -63,8 +72,7 @@ public sealed class TeamDetailPageTests : UiTestContext
     [Fact]
     public void Team_Loads_Shows_Team_Name()
     {
-        var teamsClient = SetupTeamsClient();
-        var projectsClient = SetupProjectsClient();
+        var (teamsClient, projectsClient, _) = Setup();
 
         teamsClient.TeamsGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(ATeam()));
@@ -78,8 +86,7 @@ public sealed class TeamDetailPageTests : UiTestContext
     [Fact]
     public void Projects_Load_Fails_Shows_Error_Alert()
     {
-        var teamsClient = SetupTeamsClient();
-        var projectsClient = SetupProjectsClient();
+        var (teamsClient, projectsClient, _) = Setup();
 
         teamsClient.TeamsGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(ATeam()));
@@ -94,8 +101,7 @@ public sealed class TeamDetailPageTests : UiTestContext
     [Fact]
     public void Projects_Empty_Shows_No_Projects_Message()
     {
-        var teamsClient = SetupTeamsClient();
-        var projectsClient = SetupProjectsClient();
+        var (teamsClient, projectsClient, _) = Setup();
 
         teamsClient.TeamsGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                    .Returns(Task.FromResult(ATeam()));
@@ -104,5 +110,28 @@ public sealed class TeamDetailPageTests : UiTestContext
         var teamDetailPage = RenderTeamDetailPage();
 
         teamDetailPage.Markup.Should().Contain("No projects yet");
+    }
+
+    [Fact]
+    public async Task CreateProject_Dialog_Success_InvalidatesProjectCache()
+    {
+        var (teamsClient, projectsClient, projectCacheService) = Setup();
+        teamsClient.TeamsGetAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                   .Returns(Task.FromResult(ATeam()));
+        SetupSuccessfulProjectsList(projectsClient);
+
+        var createdProject = new Project("p1", TestTeamId, "New Project", null, null, null);
+        var dialogRef = Substitute.For<IDialogReference>();
+        dialogRef.Result.Returns(Task.FromResult<DialogResult?>(DialogResult.Ok(createdProject)));
+
+        var dialogService = SetupMockedDialogService();
+        dialogService.ShowAsync<CreateProjectDialog>(Arg.Any<string>(), Arg.Any<DialogParameters<CreateProjectDialog>>())
+                     .Returns(Task.FromResult(dialogRef));
+
+        var teamDetailPage = RenderTeamDetailPage();
+        await teamDetailPage.Find(".mud-button-filled-primary").ClickAsync();
+        await Task.Delay(100);
+
+        projectCacheService.Received(1).InvalidateForTeam(TestTeamId, Arg.Any<CancellationToken>());
     }
 }

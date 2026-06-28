@@ -91,6 +91,13 @@ public abstract class UiTestContext : BunitContext, IAsyncLifetime
         return bus;
     }
 
+    protected IDialogService SetupMockedDialogService()
+    {
+        var dialogService = Substitute.For<IDialogService>();
+        Services.AddSingleton(dialogService);
+        return dialogService;
+    }
+
     protected IAuditLogClient SetupAuditLogClient()
     {
         var client = Substitute.For<IAuditLogClient>();
