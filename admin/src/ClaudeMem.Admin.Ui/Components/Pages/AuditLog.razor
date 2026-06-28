@@ -1,7 +1,11 @@
 @page "/audit-log"
 @using System.Text.Json
 @inject IAuditLogClient AuditLogClient
+@inject ITeamCacheService TeamCache
+@inject IProjectCacheService ProjectCache
+@inject ICacheInvalidationBus InvalidationBus
 @inject ISnackbar Snackbar
+@implements IDisposable
 
 <PageTitle>Audit Log — ClaudeMem Admin</PageTitle>
 
@@ -12,10 +16,31 @@
 
 <MudStack Row="true" Wrap="Wrap.Wrap" Class="mb-4" Spacing="2">
     <MudItem>
-        <MudTextField @bind-Value="_teamId" Label="Team ID" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudAutocomplete T="Team"
+                         Label="Team"
+                         SearchFunc="SearchTeams"
+                         Value="_selectedTeam"
+                         ValueChanged="OnTeamSelected"
+                         ToStringFunc="@(t => t?.Name ?? string.Empty)"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense"
+                         Clearable="true"
+                         MinCharacters="0"
+                         ResetValueOnEmptyText="true" />
     </MudItem>
     <MudItem>
-        <MudTextField @bind-Value="_projectId" Label="Project ID" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudAutocomplete T="Project"
+                         Label="Project"
+                         SearchFunc="SearchProjects"
+                         Value="_selectedProject"
+                         ValueChanged="OnProjectSelected"
+                         ToStringFunc="@(p => p?.Name ?? string.Empty)"
+                         Variant="Variant.Outlined"
+                         Margin="Margin.Dense"
+                         Clearable="true"
+                         MinCharacters="0"
+                         Disabled="_selectedTeam is null"
+                         ResetValueOnEmptyText="true" />
     </MudItem>
     <MudItem>
         <MudTextField @bind-Value="_actorId" Label="Actor ID" Variant="Variant.Outlined" Margin="Margin.Dense" />
@@ -38,6 +63,9 @@
     <MudItem Class="d-flex align-center gap-1">
         <MudButton Variant="Variant.Text" OnClick="Reload">Search</MudButton>
         <MudButton Variant="Variant.Text" OnClick="ClearFilters">Clear</MudButton>
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                       aria-label="Refresh reference data"
+                       OnClick="RefreshReferenceData" />
     </MudItem>
 </MudStack>
 
@@ -142,8 +170,12 @@
     private AuditLogPage? _page;
     private bool _loading = true;
     private AuditLogEntry? _selectedEntry;
-    private string _teamId = string.Empty;
-    private string _projectId = string.Empty;
+
+    private IReadOnlyList<Team> _allTeams = Array.Empty<Team>();
+    private Team? _selectedTeam;
+    private Project? _selectedProject;
+    private bool _disposed;
+
     private string _actorId = string.Empty;
     private string _apiKeyId = string.Empty;
     private string _action = string.Empty;
@@ -153,6 +185,85 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe before first load so an invalidation arriving during init
+        // does not cause a missed refresh.
+        InvalidationBus.Subscribe(HandleCacheInvalidated);
+        _allTeams = await TeamCache.GetAll();
+        await Reload();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        InvalidationBus.Unsubscribe(HandleCacheInvalidated);
+    }
+
+    private async Task HandleCacheInvalidated(string key)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        await InvokeAsync(async () =>
+        {
+            try
+            {
+                if (key == CacheKeys.TeamsAll)
+                {
+                    _allTeams = await TeamCache.GetAll();
+                }
+                StateHasChanged();
+            }
+#pragma warning disable CA1031
+            catch (Exception)
+#pragma warning restore CA1031
+            {
+                Snackbar.Add("Failed to refresh reference data.", Severity.Warning);
+            }
+        });
+    }
+
+    private Task<IEnumerable<Team>> SearchTeams(string value, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        IEnumerable<Team> results = string.IsNullOrEmpty(value)
+            ? _allTeams
+            : _allTeams.Where(t => t.Name?.Contains(value, StringComparison.OrdinalIgnoreCase) == true);
+        return Task.FromResult(results);
+    }
+
+    private async Task<IEnumerable<Project>> SearchProjects(string value, CancellationToken cancellationToken)
+    {
+        if (_selectedTeam?.Id is null)
+        {
+            return Enumerable.Empty<Project>();
+        }
+        var projects = await ProjectCache.GetForTeam(_selectedTeam.Id, cancellationToken);
+        return string.IsNullOrEmpty(value)
+            ? projects
+            : projects.Where(p => p.Name?.Contains(value, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    private async Task OnTeamSelected(Team? team)
+    {
+        _selectedTeam = team;
+        _selectedProject = null;
+        await Reload();
+    }
+
+    private async Task OnProjectSelected(Project? project)
+    {
+        _selectedProject = project;
+        await Reload();
+    }
+
+    private async Task RefreshReferenceData()
+    {
+        TeamCache.Invalidate(CancellationToken.None);
+        ProjectCache.InvalidateAll(CancellationToken.None);
+        _allTeams = await TeamCache.GetAll();
+        _selectedTeam = null;
+        _selectedProject = null;
         await Reload();
     }
 
@@ -163,8 +274,8 @@
         try
         {
             _page = await AuditLogClient.AuditLogAsync(
-                teamId: string.IsNullOrEmpty(_teamId) ? null : _teamId,
-                projectId: string.IsNullOrEmpty(_projectId) ? null : _projectId,
+                teamId: _selectedTeam?.Id,
+                projectId: _selectedProject?.Id,
                 actorId: string.IsNullOrEmpty(_actorId) ? null : _actorId,
                 apiKeyId: string.IsNullOrEmpty(_apiKeyId) ? null : _apiKeyId,
                 action: string.IsNullOrEmpty(_action) ? null : _action,
@@ -193,8 +304,8 @@
             var cursor = CursorHelper.ExtractCursor(_page.Next);
             var nextPage = await AuditLogClient.AuditLogAsync(
                 cursor: cursor,
-                teamId: string.IsNullOrEmpty(_teamId) ? null : _teamId,
-                projectId: string.IsNullOrEmpty(_projectId) ? null : _projectId,
+                teamId: _selectedTeam?.Id,
+                projectId: _selectedProject?.Id,
                 actorId: string.IsNullOrEmpty(_actorId) ? null : _actorId,
                 apiKeyId: string.IsNullOrEmpty(_apiKeyId) ? null : _apiKeyId,
                 action: string.IsNullOrEmpty(_action) ? null : _action,
@@ -226,8 +337,8 @@
 
     private async Task ClearFilters()
     {
-        _teamId = string.Empty;
-        _projectId = string.Empty;
+        _selectedTeam = null;
+        _selectedProject = null;
         _actorId = string.Empty;
         _apiKeyId = string.Empty;
         _action = string.Empty;
