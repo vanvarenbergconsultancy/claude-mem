@@ -6,7 +6,6 @@
 // Fix #41: documented as thread-safe singleton.
 // Fix #42: ODataException from the parser is caught and rethrown as ODataFilterParseException.
 // Fix #33: improved error message for invalid $top value.
-#nullable disable
 namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
 using System;
@@ -158,8 +157,8 @@ internal sealed class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Comp
         Query query,
         long? top,
         long? skip,
-        OrderByClause orderbyClause,
-        SelectExpandClause selectClause)
+        OrderByClause? orderbyClause,
+        SelectExpandClause? selectClause)
     {
         if (top.HasValue)
         {
@@ -246,7 +245,7 @@ internal sealed class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Comp
         return query;
     }
 
-    private static string GetSingleValuePropertyAccessNodeName(SingleValueNode expression)
+    private static string? GetSingleValuePropertyAccessNodeName(SingleValueNode expression)
     {
         if (expression is SingleValueOpenPropertyAccessNode openProperty)
         {

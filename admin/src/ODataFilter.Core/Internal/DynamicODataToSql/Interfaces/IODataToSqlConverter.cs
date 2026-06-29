@@ -2,7 +2,6 @@
 // Original license: MIT
 // Modifications: see git history from this commit onward.
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
-#nullable disable
 namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
 using System.Collections.Generic;

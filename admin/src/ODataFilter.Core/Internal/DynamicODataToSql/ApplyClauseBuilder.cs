@@ -3,7 +3,6 @@
 // Modifications: see git history from this commit onward.
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
 // Fix #58: field name decoding extended to all _x[hex]_ patterns via ODataToSqlConverter.DecodeFieldName().
-#nullable disable
 #pragma warning disable CA1859 // parameter types: QueryNode is correct here since Parameters/Expression properties are typed QueryNode
 namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
@@ -35,15 +34,15 @@ internal static class ApplyClauseBuilder
             switch (node.Kind)
             {
                 case TransformationNodeKind.Aggregate:
-                    return VisitAggregate(queryIn, node as AggregateTransformationNode);
+                    return VisitAggregate(queryIn, (AggregateTransformationNode)node);
                 case TransformationNodeKind.GroupBy:
-                    queryIn = VisitGroupBy(queryIn, node as GroupByTransformationNode);
+                    queryIn = VisitGroupBy(queryIn, (GroupByTransformationNode)node);
                     break;
                 case TransformationNodeKind.Filter:
-                    queryIn = VisitFilter(queryIn, node as FilterTransformationNode, tryToParseDates);
+                    queryIn = VisitFilter(queryIn, (FilterTransformationNode)node, tryToParseDates);
                     break;
                 case TransformationNodeKind.Compute:
-                    queryIn = VisitCompute(queryIn, node as ComputeTransformationNode);
+                    queryIn = VisitCompute(queryIn, (ComputeTransformationNode)node);
                     break;
                 default:
                     throw new NotSupportedException($"TransformationNode kind {node.Kind:g} is not supported.");
@@ -92,7 +91,7 @@ internal static class ApplyClauseBuilder
 
         if (nodeIn.ChildTransformations?.Kind == TransformationNodeKind.Aggregate)
         {
-            queryIn = VisitAggregate(queryIn, nodeIn.ChildTransformations as AggregateTransformationNode);
+            queryIn = VisitAggregate(queryIn, (AggregateTransformationNode)nodeIn.ChildTransformations);
         }
 
         return queryIn;
@@ -139,17 +138,17 @@ internal static class ApplyClauseBuilder
         var column = string.Empty;
         if (node.Kind == QueryNodeKind.Convert)
         {
-            node = (node as ConvertNode).Source;
+            node = ((ConvertNode)node).Source;
         }
 
         if (node.Kind == QueryNodeKind.SingleValuePropertyAccess)
         {
-            column = (node as SingleValuePropertyAccessNode).Property.Name.Trim();
+            column = ((SingleValuePropertyAccessNode)node).Property.Name.Trim();
         }
 
         if (node.Kind == QueryNodeKind.SingleValueOpenPropertyAccess)
         {
-            column = (node as SingleValueOpenPropertyAccessNode).Name.Trim();
+            column = ((SingleValueOpenPropertyAccessNode)node).Name.Trim();
         }
 
         // Fix #58: decode all _x[hex]_ escape sequences, not just space (_x0020_)

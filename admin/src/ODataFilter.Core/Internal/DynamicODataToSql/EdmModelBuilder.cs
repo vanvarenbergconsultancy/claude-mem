@@ -3,7 +3,6 @@
 // Modifications: see git history from this commit onward.
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
 // Fix #41: documented as thread-safe singleton.
-#nullable disable
 namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
 using System;
