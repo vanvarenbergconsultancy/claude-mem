@@ -93,7 +93,9 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
                 return _query.WhereStarts(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive);
 
             case "matchespattern":
-                var value = ((string)GetConstantValue(nodes[1])!).Replace(".*", "%");
+                var rawPattern = GetConstantValue(nodes[1]) as string
+                    ?? throw new InvalidOperationException("matchespattern requires a string argument.");
+                var value = rawPattern.Replace(".*", "%");
                 if (value.StartsWith("%5E", StringComparison.InvariantCulture))
                 {
                     value = value.Replace("%5E", "");
@@ -172,6 +174,12 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
         else if (right.Kind == QueryNodeKind.SingleValuePropertyAccess || right.Kind == QueryNodeKind.SingleValueOpenPropertyAccess)
         {
             _query = _query.WhereColumns(GetColumnName(left), op, GetColumnName(right));
+        }
+        else
+        {
+            throw new NotSupportedException(
+                $"Comparison operator with right-side node kind '{right.Kind:g}' is not supported. " +
+                "Only constant values and property access are supported on the right side of a comparison.");
         }
 
         return _query;

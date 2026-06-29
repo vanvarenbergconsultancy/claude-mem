@@ -113,12 +113,12 @@ internal sealed class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Comp
     {
         var parser = ParseODataQuery(modelName, odataQuery);
 
-        ApplyClause applyClause;
-        FilterClause filterClause;
+        ApplyClause? applyClause;
+        FilterClause? filterClause;
         long? top;
         long? skip;
-        OrderByClause orderbyClause;
-        SelectExpandClause selectClause;
+        OrderByClause? orderbyClause;
+        SelectExpandClause? selectClause;
 
         try
         {
