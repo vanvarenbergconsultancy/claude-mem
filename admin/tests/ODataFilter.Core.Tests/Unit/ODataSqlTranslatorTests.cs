@@ -3,6 +3,7 @@ namespace ODataFilter.Core.Tests.Unit;
 using System;
 
 using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 
 using ODataFilter.Core;
 
@@ -19,6 +20,7 @@ public sealed class ODataSqlTranslatorTests
     {
         var result = Sut.Translate("teams", ODataQueryOptions.Empty);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Be("SELECT * FROM \"teams\"");
         result.Parameters.Should().BeEmpty();
     }
@@ -30,6 +32,7 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("WHERE");
         result.Sql.Should().Contain("\"name\"");
         result.Parameters.Should().ContainValue("Acme");
@@ -64,6 +67,7 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("like");
         result.Parameters.Values.Should().Contain(v => ((string)v).StartsWith("ac", StringComparison.Ordinal));
     }
@@ -95,6 +99,7 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("AND");
         result.Parameters.Should().ContainSingle();
     }
@@ -117,6 +122,7 @@ public sealed class ODataSqlTranslatorTests
         var result = Sut.Translate("teams", options);
 
         // PostgresCompiler omits ASC keyword (it is the default direction in SQL)
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("ORDER BY");
         result.Sql.Should().Contain("\"name\"");
     }
@@ -128,6 +134,7 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("ORDER BY");
         result.Sql.Should().Contain("DESC");
     }
@@ -139,6 +146,7 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("\"name\"");
         result.Sql.Should().Contain("\"createdAt\"");
     }
@@ -151,6 +159,7 @@ public sealed class ODataSqlTranslatorTests
         var result = Sut.Translate("teams", options);
 
         // SqlKata parameterizes LIMIT values (LIMIT @p0 with @p0=10)
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("LIMIT");
         result.Parameters.Values.Should().Contain(10);
     }

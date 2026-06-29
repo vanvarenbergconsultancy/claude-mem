@@ -26,10 +26,9 @@ public sealed class DynamicODataToSqlRegressionTests
     [Fact]
     public void SqlKata4x_Compat_TranslatorConstructsWithPostgresCompiler()
     {
-        // Verifies that the SqlKata 4.x API changes don't break translator construction
-        // (ConvertToSQL, ConvertToSQLKataQuery, WhereColumns etc. all changed in 4.x)
         var translator = new ODataSqlTranslator(new PostgresCompiler());
-        translator.Should().NotBeNull();
+
+        translator.Translate("t", ODataQueryOptions.Empty).Sql.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -150,7 +149,7 @@ public sealed class DynamicODataToSqlRegressionTests
     // ── Additional fix: ODataFilterParseException wraps ParseFilter() failures
 
     [Fact]
-    public void ParseFilterFailure_WrappedinODataFilterParseException()
+    public void ParseFilterFailure_WrappedInODataFilterParseException()
     {
         // A filter with a malformed expression (unclosed parenthesis) should
         // throw ODataFilterParseException, not a raw ODataException.
@@ -160,7 +159,7 @@ public sealed class DynamicODataToSqlRegressionTests
 
         var action = () => Sut.Translate("table", options);
 
-        action.Should().Throw<Exception>(); // parse error surfaces as exception
+        action.Should().Throw<ODataFilterParseException>();
     }
 
     // ── Fix #33: improved $top error message ────────────────────────────────
