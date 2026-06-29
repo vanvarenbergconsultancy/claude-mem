@@ -141,7 +141,8 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
         var result = Sut.Translate("orders", options);
 
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("<");
+        result.Sql.Should().Contain(" < ");
+        result.Sql.Should().NotContain("<=");
         result.Parameters.Values.Should().Contain(100);
     }
 
@@ -209,7 +210,7 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
         using var scope = new AssertionScope();
         result.Sql.Should().Contain("like");
         // acme.* → acme% after pattern translation
-        result.Parameters.Values.Should().ContainSingle(v => v is string && ((string)v).StartsWith("acme", StringComparison.Ordinal));
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme%");
     }
 
     // ── Nested / parenthesised logic ─────────────────────────────────────────
@@ -240,7 +241,8 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
 
         var query = Sut.TranslateToQuery("teams", options);
 
-        query.Should().NotBeNull();
+        var compiled = new PostgresCompiler().Compile(query);
+        compiled.Sql.Should().Contain("WHERE");
     }
 
     [Fact]

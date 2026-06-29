@@ -69,7 +69,7 @@ public sealed class ODataSqlTranslatorTests
 
         using var scope = new AssertionScope();
         result.Sql.Should().Contain("like");
-        result.Parameters.Values.Should().Contain(v => ((string)v).StartsWith("ac", StringComparison.Ordinal));
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "ac%");
     }
 
     [Fact]
@@ -79,7 +79,9 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("like");
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "%me");
     }
 
     [Fact]
@@ -89,7 +91,9 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("events", options);
 
-        result.Sql.Should().Contain(">");
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain(" > ");
+        result.Parameters.Values.Should().ContainSingle(v => v is DateTimeOffset);
     }
 
     [Fact]
@@ -111,7 +115,11 @@ public sealed class ODataSqlTranslatorTests
 
         var result = Sut.Translate("teams", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("OR");
+        result.Parameters.Should().HaveCount(2);
+        result.Parameters.Values.Should().Contain("Acme");
+        result.Parameters.Values.Should().Contain("Beta");
     }
 
     [Fact]
@@ -165,12 +173,17 @@ public sealed class ODataSqlTranslatorTests
     }
 
     [Fact]
-    public void Translate_TopWithFilter_DoesNotThrow()
+    public void Translate_TopWithFilter_EmitsBothWhereAndLimit()
     {
         // int? Top goes through ToString() before reaching the OData parser so a
         // non-integer $top string is not reachable via the public API
-        var action = () => Sut.Translate("teams", new ODataQueryOptions { Filter = "name eq 'x'", Top = 5 });
-        action.Should().NotThrow();
+        var result = Sut.Translate("teams", new ODataQueryOptions { Filter = "name eq 'x'", Top = 5 });
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("WHERE");
+        result.Sql.Should().Contain("LIMIT");
+        result.Parameters.Values.Should().Contain("x");
+        result.Parameters.Values.Should().Contain(5);
     }
 
     [Fact]
