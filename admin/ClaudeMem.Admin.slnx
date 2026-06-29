@@ -12,8 +12,16 @@
     <Project Path="src/ClaudeMem.Admin.Api/ClaudeMem.Admin.Api.csproj" />
     <Project Path="src/ClaudeMem.Admin.Ui/ClaudeMem.Admin.Ui.csproj" />
   </Folder>
+  <Folder Name="/src/ODataFilter/">
+    <Project Path="src/ODataFilter.Core/ODataFilter.Core.csproj" />
+    <Project Path="src/ODataFilter.EfCore/ODataFilter.EfCore.csproj" />
+    <Project Path="src/ODataFilter.MudBlazor/ODataFilter.MudBlazor.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/ClaudeMem.Admin.Api.Tests/ClaudeMem.Admin.Api.Tests.csproj" />
     <Project Path="tests/ClaudeMem.Admin.Ui.Tests/ClaudeMem.Admin.Ui.Tests.csproj" />
+    <Project Path="tests/ODataFilter.Core.Tests/ODataFilter.Core.Tests.csproj" />
+    <Project Path="tests/ODataFilter.EfCore.Tests/ODataFilter.EfCore.Tests.csproj" />
+    <Project Path="tests/ODataFilter.MudBlazor.Tests/ODataFilter.MudBlazor.Tests.csproj" />
   </Folder>
 </Solution>
