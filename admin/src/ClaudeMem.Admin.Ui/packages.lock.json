@@ -4,9 +4,9 @@
     "net10.0": {
       "Meziantou.Analyzer": {
         "type": "Direct",
-        "requested": "[3.0.112, )",
-        "resolved": "3.0.112",
-        "contentHash": "4JC9VDw4HrCxYgHxFjADIwTemRZTZEZEAYs6+4fkMLmX0YPzP1pNPaC1WaP9zlpqdLiKLSItVh6fgHvUsYNTdQ=="
+        "requested": "[3.0.117, )",
+        "resolved": "3.0.117",
+        "contentHash": "22L/6jjjhTwOpGqN+3A4EMCWc8Kc0dAd49zINAlxjLYDxERnD1qPKDkE9Z6cZPjiOs32J9nsieyya1FO+kXHCw=="
       },
       "Microsoft.AspNetCore.App.Internal.Assets": {
         "type": "Direct",
@@ -32,9 +32,9 @@
       },
       "MudBlazor": {
         "type": "Direct",
-        "requested": "[9.5.0, )",
-        "resolved": "9.5.0",
-        "contentHash": "mZiuKdOG42RkA/cZhiwNwbBZAKBExDx387ylvxzokcenRFHi8n4tq8olGuXs/oWNX1Qgo7Tj7J0AhOjjSnTpcw=="
+        "requested": "[9.6.0, )",
+        "resolved": "9.6.0",
+        "contentHash": "2bziL5wy8axn82R3hPB0WBlK7o+dKYOOje0Jw7E0oqxAhFll/uqZkvVdFR/rfyA5I7sldyPs6eWO6smkMJbDZQ=="
       },
       "SonarAnalyzer.CSharp": {
         "type": "Direct",
