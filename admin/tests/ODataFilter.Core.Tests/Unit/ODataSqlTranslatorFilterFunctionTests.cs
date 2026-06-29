@@ -355,6 +355,114 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
         result.Sql.Should().Contain("NOT");
     }
 
+    // ── Date-part functions ───────────────────────────────────────────────────
+
+    [Fact]
+    public void Translate_YearFunction_EmitsDatePartClause()
+    {
+        // PostgresCompiler renders WhereDatePart as DATE_PART('YEAR', col)
+        var options = new ODataQueryOptions { Filter = "year(createdAt) eq 2024" };
+
+        var result = Sut.Translate("events", options);
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("DATE_PART");
+        result.Sql.Should().Contain("'YEAR'");
+        result.Parameters.Values.Should().Contain(2024);
+    }
+
+    [Fact]
+    public void Translate_MonthFunction_EmitsDatePartClause()
+    {
+        var options = new ODataQueryOptions { Filter = "month(createdAt) eq 3" };
+
+        var result = Sut.Translate("events", options);
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("DATE_PART");
+        result.Sql.Should().Contain("'MONTH'");
+        result.Parameters.Values.Should().Contain(3);
+    }
+
+    [Fact]
+    public void Translate_DayFunction_EmitsDatePartClause()
+    {
+        var options = new ODataQueryOptions { Filter = "day(createdAt) ge 15" };
+
+        var result = Sut.Translate("events", options);
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("DATE_PART");
+        result.Sql.Should().Contain("'DAY'");
+        result.Parameters.Values.Should().Contain(15);
+    }
+
+    [Fact]
+    public void Translate_HourFunction_EmitsDatePartClause()
+    {
+        var options = new ODataQueryOptions { Filter = "hour(startTime) ge 9" };
+
+        var result = Sut.Translate("events", options);
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("DATE_PART");
+        result.Sql.Should().Contain("'HOUR'");
+        result.Parameters.Values.Should().Contain(9);
+    }
+
+    [Fact]
+    public void Translate_MinuteFunction_EmitsDatePartClause()
+    {
+        var options = new ODataQueryOptions { Filter = "minute(startTime) lt 30" };
+
+        var result = Sut.Translate("events", options);
+
+        using var scope = new AssertionScope();
+        result.Sql.Should().Contain("DATE_PART");
+        result.Sql.Should().Contain("'MINUTE'");
+        result.Parameters.Values.Should().Contain(30);
+    }
+
+    // ── matchesPattern anchor variants ────────────────────────────────────────
+
+    [Fact]
+    public void Translate_MatchesPattern_EncodedStartAnchor_IsStripped()
+    {
+        // URL-encoded ^ (%5E) at the start is a start anchor — stripped before the LIKE pattern
+        var options = new ODataQueryOptions { Filter = "matchesPattern(name,'%5Eacme.*')" };
+
+        var result = Sut.Translate("items", options);
+
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme%");
+    }
+
+    [Fact]
+    public void Translate_MatchesPattern_DollarSuffixAnchor_IsStripped()
+    {
+        // Trailing $ is an end anchor — stripped from the LIKE pattern
+        var options = new ODataQueryOptions { Filter = "matchesPattern(name,'acme$')" };
+
+        var result = Sut.Translate("items", options);
+
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme");
+    }
+
+    // ── Unsupported right-side node kinds ─────────────────────────────────────
+
+    [Fact]
+    public void Translate_RightSideFunctionCall_ThrowsNotSupported()
+    {
+        // OData allows function calls on the right side of comparisons (e.g. name eq toupper('Acme')).
+        // ApplyComparisonOperator only handles Constant and PropertyAccess on the right side.
+        // This test verifies that unhandled right-side kinds throw rather than silently
+        // returning a WHERE-less query (which would return all rows with no error).
+        var options = new ODataQueryOptions { Filter = "name eq toupper('Acme')" };
+
+        var action = () => Sut.Translate("items", options);
+
+        action.Should().Throw<NotSupportedException>();
+    }
+
     // ── AndFilter SQL integration ─────────────────────────────────────────────
 
     [Fact]

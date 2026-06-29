@@ -122,14 +122,19 @@ public sealed class DynamicODataToSqlRegressionTests
     // ── Fix #14: column name quote-stripping (defensive) ────────────────────
 
     [Fact]
-    public void PropertyName_WithoutQuotes_EmitsColumnCorrectly()
+    public void Fix14_PropertyName_EmitsQuotedColumnNotSingleQuotedInSql()
     {
-        // Baseline: normal unquoted property names should always pass through cleanly
+        // Fix #14: column name stripping ensures property names are not wrapped in SQL
+        // single quotes (which would produce malformed SQL like 'name' = @p0 instead of
+        // the correct "name" = @p0).
         var options = new ODataQueryOptions { Filter = "name eq 'Acme'" };
 
         var result = Sut.Translate("items", options);
 
+        using var scope = new AssertionScope();
         result.Sql.Should().Contain("\"name\"");
+        result.Sql.Should().NotContain("'name'");
+        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "Acme");
     }
 
     // ── Fix #42: ODataFilterParseException wraps parser construction failures ─
