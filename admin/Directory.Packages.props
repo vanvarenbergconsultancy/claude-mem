@@ -6,6 +6,7 @@
   <ItemGroup Label="ASP.NET Core">
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0" />
     <PackageVersion Include="MudBlazor" Version="9.6.0" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.10" />
   </ItemGroup>
   <ItemGroup Label="Analyzers">
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.121" />

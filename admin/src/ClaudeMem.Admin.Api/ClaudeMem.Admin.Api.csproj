@@ -24,9 +24,7 @@
 
   <Target Name="CopyOpenApiSpec" BeforeTargets="Build">
     <MakeDir Directories="$(MSBuildProjectDirectory)\openapi" />
-    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\docs\openapi.yaml"
-          DestinationFiles="$(MSBuildProjectDirectory)\openapi\v1.yaml"
-          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\docs\openapi.yaml" DestinationFiles="$(MSBuildProjectDirectory)\openapi\v1.yaml" SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup>
@@ -37,6 +35,7 @@
     <PackageReference Include="Mediator.Abstractions" />
     <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
     <PackageReference Include="Npgsql" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Testcontainers.PostgreSql" />
   </ItemGroup>
 

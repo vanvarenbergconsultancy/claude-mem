@@ -9,6 +9,7 @@ using ClaudeMem.Admin.Api.Infrastructure.Database;
 using ClaudeMem.Admin.Api.Infrastructure.Pagination;
 using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
+using Scalar.AspNetCore;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -65,14 +66,7 @@ public class Program
 
         if (app.Environment.IsDevelopment() || isLocalEnvironment)
         {
-            app.MapGet("/openapi/v1.yaml", async (HttpContext ctx, IWebHostEnvironment env) =>
-            {
-                var openApiPath = Path.Combine(env.ContentRootPath, "openapi", "v1.yaml");
-                ctx.Response.ContentType = "application/yaml; charset=utf-8";
-                await ctx.Response.SendFileAsync(openApiPath, ctx.RequestAborted);
-            })
-                .ExcludeFromDescription()
-                .AllowAnonymous();
+            MapDeveloperEndpoints(app);
         }
 
         app.UseAuthentication();
@@ -80,6 +74,24 @@ public class Program
         app.MapControllers();
 
         await app.RunAsync();
+    }
+
+    private static void MapDeveloperEndpoints(WebApplication app)
+    {
+        app.MapGet("/openapi/v1.yaml", async (HttpContext ctx, IWebHostEnvironment env) =>
+        {
+            var openApiPath = Path.Combine(env.ContentRootPath, "openapi", "v1.yaml");
+            ctx.Response.ContentType = "application/yaml; charset=utf-8";
+            await ctx.Response.SendFileAsync(openApiPath, ctx.RequestAborted);
+        }).AllowAnonymous().ExcludeFromDescription();
+
+        app.MapScalarApiReference(options => options
+            .WithTitle("Claude-Mem Admin API")
+            .WithOpenApiRoutePattern("/openapi/v1.yaml")
+            .AddPreferredSecuritySchemes("ApiKeyAuth")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+            .WithDynamicBaseServerUrl()
+        ).AllowAnonymous().ExcludeFromDescription();
     }
 
     private static void AddApiKeyAuth(IServiceCollection services, IConfiguration configuration)

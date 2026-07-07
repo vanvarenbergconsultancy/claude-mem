@@ -646,9 +646,8 @@
           "FluentValidation": "[12.1.1, )",
           "FluentValidation.DependencyInjectionExtensions": "[12.1.1, )",
           "Mediator.Abstractions": "[3.0.2, )",
-          "Microsoft.AspNetCore.OpenApi": "(, )",
-          "Microsoft.OpenApi": "(, )",
           "Npgsql": "[10.0.3, )",
+          "Scalar.AspNetCore": "[2.16.10, )",
           "Testcontainers.PostgreSql": "[4.13.0, )"
         }
       },
@@ -721,6 +720,12 @@
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.9"
         }
+      },
+      "Scalar.AspNetCore": {
+        "type": "CentralTransitive",
+        "requested": "[2.16.10, )",
+        "resolved": "2.16.10",
+        "contentHash": "dJsam1uxJ+h6YzaqDGjja1y3miyBd4VDumMwwow03yJapiRp3OtV5lMaOUvp8w5b16gAflYyvfj7HDL+0X2Rqw=="
       }
     }
   }
