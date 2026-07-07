@@ -1,9 +1,9 @@
-namespace ODataFilter.Core;
 
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+namespace ODataFilter.Core;
 /// <summary>Fluent builder for <see cref="ODataFieldMap"/>.</summary>
 public sealed class ODataFieldMapBuilder
 {

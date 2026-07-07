@@ -1,16 +1,13 @@
-namespace ODataFilter.Core.Tests.Unit;
 
 using System;
 
 using AwesomeAssertions;
 using AwesomeAssertions.Execution;
-
-using ODataFilter.Core;
-
 using SqlKata.Compilers;
 
 using Xunit;
 
+namespace ODataFilter.Core.Tests.Unit;
 /// <summary>
 /// Covers filter operators and functions not exercised by <see cref="ODataSqlTranslatorTests"/>:
 /// NOT functions, case-insensitive matching, null equality, in-operator, numeric operators,

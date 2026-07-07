@@ -1,13 +1,10 @@
-namespace ODataFilter.Core;
 
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-/// <summary>
-/// Maps frontend field names to their database column names by preprocessing the OData filter
-/// and orderby strings before they reach the OData parser.
-/// </summary>
+namespace ODataFilter.Core;
+/// <summary> Maps frontend field names to their database column names by preprocessing the OData filter and orderby strings before they reach the OData parser. </summary>
 /// <remarks>
 /// Preprocessing happens at string level (word-boundary replacement) before the OData parser sees the query.
 /// This means field names with special characters that are not valid OData identifiers can be safely aliased here.

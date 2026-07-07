@@ -1,16 +1,13 @@
-namespace ODataFilter.Core.Tests.Unit;
 
 using System;
 
 using AwesomeAssertions;
 using AwesomeAssertions.Execution;
-
-using ODataFilter.Core;
-
 using SqlKata.Compilers;
 
 using Xunit;
 
+namespace ODataFilter.Core.Tests.Unit;
 public sealed class ODataSqlTranslatorTests
 {
     private static readonly ODataSqlTranslator Sut = new(new PostgresCompiler());

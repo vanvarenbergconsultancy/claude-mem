@@ -6,22 +6,27 @@
 // Fix #46: leading/trailing spaces in string constants are now preserved.
 // Fix #14: column names erroneously wrapped in single quotes are stripped before use.
 #pragma warning disable CA1859 // parameter types: QueryNode is correct here since Parameters collections are IEnumerable<QueryNode>
-namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
 using Microsoft.OData.UriParser;
-
 using SqlKata;
 
-internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : QueryNodeVisitor<Query>
+namespace ODataFilter.Core.DynamicODataToSql;
+
+internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
 {
-    private const DateTimeStyles DATETIMESTYLES = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal | DateTimeStyles.AllowWhiteSpaces;
-    private Query _query = query;
-    private readonly bool _tryToParseDates = tryToParseDates;
+    private const DateTimeStyles DateTimeStyles = System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AllowWhiteSpaces;
+    private Query _query;
+    private readonly bool _tryToParseDates;
+
+    public FilterClauseBuilder(Query query, bool tryToParseDates)
+    {
+        _query = query;
+        _tryToParseDates = tryToParseDates;
+    }
 
     /// <inheritdoc/>
     public override Query Visit(InNode nodeIn)
@@ -33,6 +38,7 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
 
         var leftColumnName = GetColumnName(nodeIn.Left);
         var rightValues = GetCollectionConstantValues((CollectionConstantNode)nodeIn.Right);
+
         return _query.WhereIn(leftColumnName, rightValues);
     }
 
@@ -95,6 +101,7 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
             case "matchespattern":
                 var rawPattern = GetConstantValue(nodes[1]) as string
                     ?? throw new InvalidOperationException("matchespattern requires a string argument.");
+
                 var value = rawPattern.Replace(".*", "%");
                 if (value.StartsWith("%5E", StringComparison.InvariantCulture))
                 {
@@ -143,8 +150,10 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
             {
                 lq = lq.Or();
             }
+
             return right.Accept(new FilterClauseBuilder(lq, _tryToParseDates));
         });
+
         return _query;
     }
 
@@ -190,20 +199,20 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
         var columnName = GetColumnName(leftNode.Parameters.First());
         switch (leftNode.Name.ToUpperInvariant())
         {
-            case "YEAR":
-            case "MONTH":
-            case "DAY":
-            case "HOUR":
-            case "MINUTE":
+            case Constants.Dates.Year:
+            case Constants.Dates.Month:
+            case Constants.Dates.Day:
+            case Constants.Dates.Hour:
+            case Constants.Dates.Minute:
                 return q.WhereDatePart(leftNode.Name, columnName, operand, rightValue);
-            case "DATE":
-                return q.WhereDate(columnName, operand, rightValue is DateTime d ? d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
-            case "TIME":
-                return q.WhereTime(columnName, operand, rightValue is DateTime t ? t.ToString("HH:mm", CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
-            case "TOUPPER":
-            case "TOLOWER":
+            case Constants.Dates.Date:
+                return q.WhereDate(columnName, operand, rightValue is DateTime d ? d.ToString(Constants.Dates.DateFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
+            case Constants.Dates.Time:
+                return q.WhereTime(columnName, operand, rightValue is DateTime t ? t.ToString(Constants.Dates.HourFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
+            case Constants.Operations.ToUpper:
+            case Constants.Operations.ToLower:
                 return q.WhereLike(columnName, rightValue, false);
-            case "INDEXOF":
+            case Constants.Operations.IndexOf:
                 return ApplyIndexOfFunction(q, leftNode, rightValue, columnName);
             default:
                 return q;
@@ -215,6 +224,7 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
         var nodes = leftNode.Parameters.ToArray();
         var caseSensitive = true;
         (caseSensitive, columnName) = GetInnerFunctionCallParameterColumn(nodes, caseSensitive, columnName);
+
         return rightValue?.Equals(-1) == true
             ? q.WhereNotContains(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive)
             : q.WhereContains(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive);
@@ -239,8 +249,8 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
     private static (bool CaseSensitive, string ColumnName) GetFunctionCallParameterInfo(bool caseSensitive, string columnName, SingleValueFunctionCallNode paramNode)
     {
         var functionName = paramNode.Name.ToUpperInvariant();
-        if (string.Equals(functionName, "TOUPPER", StringComparison.Ordinal) ||
-            string.Equals(functionName, "TOLOWER", StringComparison.Ordinal))
+        if (string.Equals(functionName, Constants.Operations.ToUpper, StringComparison.Ordinal) ||
+            string.Equals(functionName, Constants.Operations.ToLower, StringComparison.Ordinal))
         {
             caseSensitive = false;
             columnName = GetColumnName(paramNode.Parameters.First());
@@ -249,15 +259,16 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
         return (caseSensitive, columnName);
     }
 
-    private static bool ConvertToDateTimeUTC(string dateTimeString, out DateTime dateTime)
+    private static bool ConvertToDateTimeUtc(string dateTimeString, out DateTime dateTime)
     {
-        if (DateTime.TryParse(dateTimeString, CultureInfo.InvariantCulture.DateTimeFormat, DATETIMESTYLES, out var dateTimeValue))
+        if (DateTime.TryParse(dateTimeString, CultureInfo.InvariantCulture.DateTimeFormat, DateTimeStyles, out var dateTimeValue))
         {
             dateTime = dateTimeValue;
             return true;
         }
 
         dateTime = default;
+
         return false;
     }
 
@@ -299,7 +310,7 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
             {
                 // Fix #46: preserve leading/trailing whitespace in string values.
                 // Trim only for date detection (date literals have no meaningful surrounding spaces).
-                if (_tryToParseDates && ConvertToDateTimeUTC(stringValue.Trim(), out var dateTime))
+                if (_tryToParseDates && ConvertToDateTimeUtc(stringValue.Trim(), out var dateTime))
                 {
                     return dateTime;
                 }
@@ -326,14 +337,14 @@ internal sealed class FilterClauseBuilder(Query query, bool tryToParseDates) : Q
 
     private static string GetOperatorString(BinaryOperatorKind operatorKind) => operatorKind switch
     {
-        BinaryOperatorKind.Equal => "=",
-        BinaryOperatorKind.NotEqual => "<>",
-        BinaryOperatorKind.GreaterThan => ">",
-        BinaryOperatorKind.GreaterThanOrEqual => ">=",
-        BinaryOperatorKind.LessThan => "<",
-        BinaryOperatorKind.LessThanOrEqual => "<=",
-        BinaryOperatorKind.Or => "or",
-        BinaryOperatorKind.And => "and",
-        _ => string.Empty,
+        BinaryOperatorKind.Equal => Constants.BinaryOperators.Equal,
+        BinaryOperatorKind.NotEqual => Constants.BinaryOperators.NotEqual,
+        BinaryOperatorKind.GreaterThan => Constants.BinaryOperators.GreaterThan,
+        BinaryOperatorKind.GreaterThanOrEqual => Constants.BinaryOperators.GreaterThanOrEqual,
+        BinaryOperatorKind.LessThan => Constants.BinaryOperators.LessThan,
+        BinaryOperatorKind.LessThanOrEqual => Constants.BinaryOperators.LessThanOrEqual,
+        BinaryOperatorKind.Or => Constants.BinaryOperators.Or,
+        BinaryOperatorKind.And => Constants.BinaryOperators.And,
+        _ => string.Empty
     };
 }

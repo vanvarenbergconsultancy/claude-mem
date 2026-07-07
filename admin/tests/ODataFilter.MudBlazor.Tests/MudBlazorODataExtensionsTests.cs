@@ -1,16 +1,10 @@
-namespace ODataFilter.MudBlazor.Tests;
-
 using System.Collections.Generic;
-
 using AwesomeAssertions;
-
-using global::MudBlazor;
-
+using MudBlazor;
 using NSubstitute;
-
-using ODataFilter.MudBlazor;
-
 using Xunit;
+
+namespace ODataFilter.MudBlazor.Tests;
 
 public sealed class MudBlazorODataExtensionsTests
 {

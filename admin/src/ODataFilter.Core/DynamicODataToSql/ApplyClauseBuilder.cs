@@ -4,15 +4,14 @@
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
 // Fix #58: field name decoding extended to all _x[hex]_ patterns via ODataToSqlConverter.DecodeFieldName().
 #pragma warning disable CA1859 // parameter types: QueryNode is correct here since Parameters/Expression properties are typed QueryNode
-namespace ODataFilter.Core.Internal.DynamicODataToSql;
 
 using System;
 using System.Linq;
-
 using Microsoft.OData.UriParser;
 using Microsoft.OData.UriParser.Aggregation;
-
 using SqlKata;
+
+namespace ODataFilter.Core.DynamicODataToSql;
 
 internal static class ApplyClauseBuilder
 {
@@ -44,11 +43,14 @@ internal static class ApplyClauseBuilder
                 case TransformationNodeKind.Compute:
                     queryIn = VisitCompute(queryIn, (ComputeTransformationNode)node);
                     break;
+                case TransformationNodeKind.Expand:
                 default:
                     throw new NotSupportedException($"TransformationNode kind {node.Kind:g} is not supported.");
             }
+
             i++;
         }
+
         return queryIn;
     }
 
@@ -56,26 +58,28 @@ internal static class ApplyClauseBuilder
     {
         foreach (var expr in nodeIn.AggregateExpressions.OfType<AggregateExpression>())
         {
-            if (expr.AggregateKind == AggregateExpressionKind.PropertyAggregate)
+            if (expr.AggregateKind != AggregateExpressionKind.PropertyAggregate)
             {
-                var col = GetColumnName(expr.Expression);
-                var alias = expr.Alias;
-                queryIn = expr.Method switch
-                {
-                    AggregationMethod.Sum or AggregationMethod.Min or AggregationMethod.Max =>
-                        queryIn.SelectRaw($"{expr.Method:g}(\"{col}\") AS \"{alias}\""),
-                    AggregationMethod.Average =>
-                        queryIn.SelectRaw($"AVG(\"{col}\") AS \"{alias}\""),
-                    AggregationMethod.CountDistinct =>
-                        queryIn.SelectRaw($"COUNT(DISTINCT \"{col}\") AS \"{alias}\""),
-                    AggregationMethod.VirtualPropertyCount =>
-                        queryIn.SelectRaw($"COUNT(1) AS \"{alias}\""),
-                    AggregationMethod.Custom =>
-                        throw new NotSupportedException("Custom aggregate expressions are not supported."),
-                    _ =>
-                        throw new NotSupportedException($"Aggregate method {expr.Method:g} is not supported."),
-                };
+                continue;
             }
+
+            var col = GetColumnName(expr.Expression);
+            var alias = expr.Alias;
+            queryIn = expr.Method switch
+            {
+                AggregationMethod.Sum or AggregationMethod.Min or AggregationMethod.Max =>
+                    queryIn.SelectRaw($"{expr.Method:g}(\"{col}\") AS \"{alias}\""),
+                AggregationMethod.Average =>
+                    queryIn.SelectRaw($"AVG(\"{col}\") AS \"{alias}\""),
+                AggregationMethod.CountDistinct =>
+                    queryIn.SelectRaw($"COUNT(DISTINCT \"{col}\") AS \"{alias}\""),
+                AggregationMethod.VirtualPropertyCount =>
+                    queryIn.SelectRaw($"COUNT(1) AS \"{alias}\""),
+                AggregationMethod.Custom =>
+                    throw new NotSupportedException("Custom aggregate expressions are not supported."),
+                _ =>
+                    throw new NotSupportedException($"Aggregate method {expr.Method:g} is not supported.")
+            };
         }
 
         return queryIn;
@@ -106,11 +110,11 @@ internal static class ApplyClauseBuilder
             {
                 switch (se.Name.ToUpperInvariant())
                 {
-                    case "YEAR":
-                    case "MONTH":
-                    case "DAY":
-                    case "HOUR":
-                    case "MINUTE":
+                    case Constants.Dates.Year:
+                    case Constants.Dates.Month:
+                    case Constants.Dates.Day:
+                    case Constants.Dates.Hour:
+                    case Constants.Dates.Minute:
                         var columnName = GetColumnName(se.Parameters.Single());
                         queryIn = queryIn.SelectRaw($"{se.Name}({columnName}) as {computeExpression.Alias}");
                         break;
@@ -130,6 +134,7 @@ internal static class ApplyClauseBuilder
     private static Query VisitFilter(Query queryIn, FilterTransformationNode nodeIn, bool tryToParseDates)
     {
         var filterClauseBuilder = new FilterClauseBuilder(queryIn, tryToParseDates);
+
         return nodeIn.FilterClause.Expression.Accept(filterClauseBuilder);
     }
 

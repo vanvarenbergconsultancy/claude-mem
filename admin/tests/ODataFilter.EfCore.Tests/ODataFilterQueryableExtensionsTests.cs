@@ -1,6 +1,4 @@
-namespace ODataFilter.EfCore.Tests;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,10 +8,9 @@ using AwesomeAssertions.Execution;
 using Gridify;
 
 using ODataFilter.Core;
-using ODataFilter.EfCore;
-
 using Xunit;
 
+namespace ODataFilter.EfCore.Tests;
 public sealed class ODataFilterQueryableExtensionsTests
 {
     private static readonly IQueryable<Product> Products = new List<Product>

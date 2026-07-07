@@ -1,15 +1,10 @@
-namespace ODataFilter.Core.Tests.Unit;
-
 using System;
-
 using AwesomeAssertions;
 using AwesomeAssertions.Execution;
-
-using ODataFilter.Core;
-
 using SqlKata.Compilers;
-
 using Xunit;
+
+namespace ODataFilter.Core.Tests.Unit;
 
 /// <summary>Regression tests — one test per bug fixed in the absorbed DynamicODataToSQL source.</summary>
 /// <remarks>

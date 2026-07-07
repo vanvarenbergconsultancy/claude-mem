@@ -3,11 +3,10 @@
 // Modifications: see git history from this commit onward.
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
 // Fix #41: documented as thread-safe singleton.
-namespace ODataFilter.Core.Internal.DynamicODataToSql;
-
 using System;
-
 using Microsoft.OData.Edm;
+
+namespace ODataFilter.Core.DynamicODataToSql;
 
 /// <summary>
 /// Builds an open EDM entity model for a given table name so the OData URI parser
@@ -16,7 +15,7 @@ using Microsoft.OData.Edm;
 /// <remarks>Thread-safe. Register as singleton in DI.</remarks>
 internal class EdmModelBuilder : IEdmModelBuilder
 {
-    private const string DEFAULTNAMESPACE = "ODataToSqlConverter";
+    private const string DefaultNamespace = "ODataToSqlConverter";
 
     /// <inheritdoc/>
     public (IEdmModel, IEdmEntityType, IEdmEntitySet) BuildTableModel(string tableName)
@@ -27,11 +26,11 @@ internal class EdmModelBuilder : IEdmModelBuilder
         }
 
         var model = new EdmModel();
-        var entityType = new EdmEntityType(DEFAULTNAMESPACE, tableName, null, false, true);
+        var entityType = new EdmEntityType(DefaultNamespace, tableName, null, false, true);
         AddProperties(entityType);
         model.AddElement(entityType);
 
-        var defaultContainer = new EdmEntityContainer(DEFAULTNAMESPACE, "DefaultContainer");
+        var defaultContainer = new EdmEntityContainer(DefaultNamespace, "DefaultContainer");
         model.AddElement(defaultContainer);
         var entitySet = defaultContainer.AddEntitySet(tableName, entityType);
 

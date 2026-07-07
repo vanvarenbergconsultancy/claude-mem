@@ -2,9 +2,9 @@
 // Original license: MIT
 // Modifications: see git history from this commit onward.
 // Changes include: target framework upgrade, SqlKata 4.x compatibility, namespace moved to ODataFilter.Core.Internal.
-namespace ODataFilter.Core.Internal.DynamicODataToSql;
-
 using Microsoft.OData.Edm;
+
+namespace ODataFilter.Core.DynamicODataToSql;
 
 internal interface IEdmModelBuilder
 {
