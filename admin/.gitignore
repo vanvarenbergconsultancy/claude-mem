@@ -362,3 +362,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# OpenAPI spec copied from docs/ by MSBuild target
+src/ClaudeMem.Admin.Api/openapi/

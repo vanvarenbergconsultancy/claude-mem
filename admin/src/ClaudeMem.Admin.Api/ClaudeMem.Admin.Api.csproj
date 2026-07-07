@@ -17,6 +17,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="openapi\v1.yaml" Condition="Exists('openapi\v1.yaml')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="CopyOpenApiSpec" BeforeTargets="Build">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\openapi" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\..\docs\openapi.yaml"
+          DestinationFiles="$(MSBuildProjectDirectory)\openapi\v1.yaml"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" />
     <PackageReference Include="Dapper.SqlBuilder" />
     <PackageReference Include="FluentValidation" />

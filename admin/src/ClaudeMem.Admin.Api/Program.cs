@@ -12,6 +12,7 @@ using Dapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -64,11 +65,14 @@ public class Program
 
         if (app.Environment.IsDevelopment() || isLocalEnvironment)
         {
-            app.MapGet("/openapi/v1.yaml", async (HttpContext ctx) =>
+            app.MapGet("/openapi/v1.yaml", async (HttpContext ctx, IWebHostEnvironment env) =>
             {
+                var openApiPath = Path.Combine(env.ContentRootPath, "openapi", "v1.yaml");
                 ctx.Response.ContentType = "application/yaml; charset=utf-8";
-                await ctx.Response.SendFileAsync("openapi/v1.yaml", ctx.RequestAborted);
-            }).ExcludeFromDescription();
+                await ctx.Response.SendFileAsync(openApiPath, ctx.RequestAborted);
+            })
+                .ExcludeFromDescription()
+                .AllowAnonymous();
         }
 
         app.UseAuthentication();
