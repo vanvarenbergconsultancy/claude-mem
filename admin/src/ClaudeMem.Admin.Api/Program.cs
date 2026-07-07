@@ -64,7 +64,11 @@ public class Program
 
         if (app.Environment.IsDevelopment() || isLocalEnvironment)
         {
-            app.MapOpenApi();
+            app.MapGet("/openapi/v1.yaml", async (HttpContext ctx) =>
+            {
+                ctx.Response.ContentType = "application/yaml; charset=utf-8";
+                await ctx.Response.SendFileAsync("openapi/v1.yaml", ctx.RequestAborted);
+            }).ExcludeFromDescription();
         }
 
         app.UseAuthentication();
@@ -176,8 +180,6 @@ public class Program
         {
             ConfigureInvalidModelStateOptionsForCorrectReturnCodesAndResults(options);
         });
-
-        services.AddOpenApi();
     }
 
     /// <summary>
