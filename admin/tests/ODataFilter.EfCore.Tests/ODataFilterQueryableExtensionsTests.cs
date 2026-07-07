@@ -18,7 +18,7 @@ public sealed class ODataFilterQueryableExtensionsTests
         new() { Id = 1, Name = "Acme Widget", Price = 9.99m, Active = true },
         new() { Id = 2, Name = "Beta Gadget", Price = 49.99m, Active = true },
         new() { Id = 3, Name = "Gamma Device", Price = 149.99m, Active = false },
-        new() { Id = 4, Name = "Acme Pro", Price = 199.99m, Active = true },
+        new() { Id = 4, Name = "Acme Pro", Price = 199.99m, Active = true }
     }.AsQueryable();
 
     [Fact]
@@ -98,7 +98,7 @@ public sealed class ODataFilterQueryableExtensionsTests
         var options = new ODataQueryOptions
         {
             Filter = "Active eq true",
-            OrderBy = "Price desc",
+            OrderBy = "Price desc"
         };
 
         var result = Products.ApplyODataOptions(options).ToList();

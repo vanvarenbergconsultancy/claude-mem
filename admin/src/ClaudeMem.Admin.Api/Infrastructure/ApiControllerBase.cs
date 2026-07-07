@@ -33,7 +33,7 @@ public abstract class ApiControllerBase : ControllerBase
             ErrorType.Conflict   => Problem(type: problemType, detail: error.Message, statusCode: 409),
             ErrorType.Validation => Problem(type: problemType, detail: error.Message, statusCode: 422),
             ErrorType.Forbidden  => Forbid(),
-            _                    => Problem(type: problemType, detail: error.Message, statusCode: 500),
+            _                    => Problem(type: problemType, detail: error.Message, statusCode: 500)
         };
     }
 }

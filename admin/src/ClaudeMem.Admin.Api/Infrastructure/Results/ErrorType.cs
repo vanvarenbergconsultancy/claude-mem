@@ -89,5 +89,5 @@ public enum ErrorType
     /// Only use this type when the failure is genuinely transient; do not use it to mask persistent errors that happen to be intermittent.
     /// </para>
     /// </summary>
-    Transient = 500,
+    Transient = 500
 }

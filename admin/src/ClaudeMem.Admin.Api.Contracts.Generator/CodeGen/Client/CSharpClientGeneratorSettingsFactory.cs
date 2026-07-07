@@ -48,7 +48,7 @@ public class CSharpClientGeneratorSettingsFactory : CSharpGeneratorSettingsFacto
             UseHttpClientCreationMethod = false,
             UseHttpRequestMessageCreationMethod = false,
             WrapDtoExceptions = false,
-            WrapResponses = false,
+            WrapResponses = false
         };
     }
 

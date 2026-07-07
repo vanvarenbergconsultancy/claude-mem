@@ -134,7 +134,7 @@ internal static class LocalContainerSetup
             "Implemented cursor-based pagination for the teams list endpoint with stable ordering by created_at DESC.",
             "Investigated a slow query on observations filtered by project — added composite index on (team_id, project_id, created_at).",
             "Deployed schema migration to add content_search TSVECTOR column for full-text search on observations.",
-            "Reviewed API key revocation flow; revoked_at is set but the key record is retained for audit purposes.",
+            "Reviewed API key revocation flow; revoked_at is set but the key record is retained for audit purposes."
         ];
 
         for (var i = 0; i < contents.Length; i++)

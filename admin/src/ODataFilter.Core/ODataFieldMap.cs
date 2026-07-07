@@ -37,7 +37,7 @@ public sealed class ODataFieldMap
         return options with
         {
             Filter = ApplyMappings(options.Filter),
-            OrderBy = ApplyMappings(options.OrderBy),
+            OrderBy = ApplyMappings(options.OrderBy)
         };
     }
 

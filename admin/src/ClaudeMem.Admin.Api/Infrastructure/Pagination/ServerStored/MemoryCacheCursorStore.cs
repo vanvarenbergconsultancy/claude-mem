@@ -29,7 +29,7 @@ internal sealed class MemoryCacheCursorStore : ICursorStore
         var newOpaqueToken = Guid.NewGuid().ToString("N");
         var cacheOptions = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = _options.TokenExpiry,
+            AbsoluteExpirationRelativeToNow = _options.TokenExpiry
         };
 
         _cache.Set(newOpaqueToken, payload, cacheOptions);

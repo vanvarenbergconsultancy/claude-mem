@@ -38,7 +38,7 @@ internal sealed class DistributedCacheCursorStore : ICursorStore
         
         await _cache.SetAsync(newOpaqueToken, bytes, new DistributedCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = _options.TokenExpiry,
+            AbsoluteExpirationRelativeToNow = _options.TokenExpiry
         }, cancellationToken);
         
         return newOpaqueToken;

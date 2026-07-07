@@ -28,7 +28,7 @@ internal sealed class InvalidCursorExceptionHandler : IExceptionHandler
         {
             Status = StatusCodes.Status400BadRequest,
             Title = "Invalid cursor.",
-            Detail = exception.Message,
+            Detail = exception.Message
         };
 
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -37,7 +37,7 @@ internal sealed class InvalidCursorExceptionHandler : IExceptionHandler
         {
             HttpContext = httpContext,
             ProblemDetails = problemDetails,
-            Exception = exception,
+            Exception = exception
         };
 
         await _problemDetailsService.WriteAsync(problemDetailsContext);

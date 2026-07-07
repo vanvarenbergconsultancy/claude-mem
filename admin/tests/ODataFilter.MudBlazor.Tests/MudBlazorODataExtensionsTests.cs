@@ -21,7 +21,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.Contains, "acme"),
+            MakeFilter("name", FilterOperator.String.Contains, "acme")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -34,7 +34,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.NotContains, "spam"),
+            MakeFilter("name", FilterOperator.String.NotContains, "spam")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -47,7 +47,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("status", FilterOperator.String.Equal, "active"),
+            MakeFilter("status", FilterOperator.String.Equal, "active")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -60,7 +60,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("status", FilterOperator.String.NotEqual, "deleted"),
+            MakeFilter("status", FilterOperator.String.NotEqual, "deleted")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -73,7 +73,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.StartsWith, "Ac"),
+            MakeFilter("name", FilterOperator.String.StartsWith, "Ac")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -86,7 +86,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.EndsWith, "me"),
+            MakeFilter("name", FilterOperator.String.EndsWith, "me")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -99,7 +99,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.Empty, null),
+            MakeFilter("name", FilterOperator.String.Empty, null)
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -112,7 +112,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.NotEmpty, null),
+            MakeFilter("name", FilterOperator.String.NotEmpty, null)
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -125,7 +125,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("count", FilterOperator.Number.GreaterThan, 5),
+            MakeFilter("count", FilterOperator.Number.GreaterThan, 5)
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -138,7 +138,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("count", FilterOperator.Number.LessThanOrEqual, 100),
+            MakeFilter("count", FilterOperator.Number.LessThanOrEqual, 100)
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -152,7 +152,7 @@ public sealed class MudBlazorODataExtensionsTests
         var filters = new[]
         {
             MakeFilter("name", FilterOperator.String.Contains, "acme"),
-            MakeFilter("active", FilterOperator.Boolean.Is, true),
+            MakeFilter("active", FilterOperator.Boolean.Is, true)
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -166,7 +166,7 @@ public sealed class MudBlazorODataExtensionsTests
         var filters = new[]
         {
             MakeFilter("name", FilterOperator.String.Equal, null),
-            MakeFilter("status", FilterOperator.String.Equal, "active"),
+            MakeFilter("status", FilterOperator.String.Equal, "active")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -179,7 +179,7 @@ public sealed class MudBlazorODataExtensionsTests
     {
         var filters = new[]
         {
-            MakeFilter("name", FilterOperator.String.Equal, "O'Brien"),
+            MakeFilter("name", FilterOperator.String.Equal, "O'Brien")
         };
 
         var result = filters.ToODataFilter<TestEntity>();
@@ -221,7 +221,7 @@ public sealed class MudBlazorODataExtensionsTests
         var sorts = new[]
         {
             new SortDefinition<TestEntity>("name", false, 0, null!, null),
-            new SortDefinition<TestEntity>("createdAt", true, 1, null!, null),
+            new SortDefinition<TestEntity>("createdAt", true, 1, null!, null)
         };
 
         var result = sorts.ToODataOrderBy();
