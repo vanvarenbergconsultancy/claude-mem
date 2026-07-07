@@ -189,32 +189,32 @@ internal sealed class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Comp
         {
             // Fix #33: improved error message for invalid $top
             odataQuery.TryGetValue("$top", out var topValue);
-            throw new ODataFilterParseException(
-                $"Invalid $top value '{topValue}': must be a non-negative integer. Original error: {ex.Message}",
-                ex);
+
+            throw new ODataFilterParseException($"Invalid $top value '{topValue}': must be a non-negative integer. Original error: {ex.Message}", ex);
         }
     }
 
     private (string, IDictionary<string, object>) CompileSqlKataQuery(Query query)
     {
         var sqlResult = _sqlCompiler.Compile(query);
+
         return (sqlResult.Sql, sqlResult.NamedBindings);
     }
 
-    private static Query BuildOrderByClause(Query query, OrderByClause orderbyClause)
+    private static Query BuildOrderByClause(Query query, OrderByClause orderByClause)
     {
-        while (orderbyClause != null)
+        while (orderByClause != null)
         {
-            var expressionName = GetSingleValuePropertyAccessNodeName(orderbyClause.Expression);
+            var expressionName = GetSingleValuePropertyAccessNodeName(orderByClause.Expression);
             if (expressionName is not null)
             {
                 var columnName = DecodeFieldName(expressionName.Trim());
-                query = orderbyClause.Direction == OrderByDirection.Ascending
+                query = orderByClause.Direction == OrderByDirection.Ascending
                     ? query.OrderBy(columnName)
                     : query.OrderByDesc(columnName);
             }
 
-            orderbyClause = orderbyClause.ThenBy;
+            orderByClause = orderByClause.ThenBy;
         }
 
         return query;
