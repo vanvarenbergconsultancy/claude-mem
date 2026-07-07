@@ -1,4 +1,11 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ClaudeMem.Admin.Api.Infrastructure;
 using ClaudeMem.Admin.Api.Infrastructure.Auth;
+using ClaudeMem.Admin.Api.Infrastructure.Database;
 using ClaudeMem.Admin.Api.Infrastructure.Pagination;
 using ClaudeMem.Admin.Api.Infrastructure.Validation;
 using Dapper;
@@ -11,13 +18,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ClaudeMem.Admin.Api.Infrastructure;
-using ClaudeMem.Admin.Api.Infrastructure.Database;
 
 namespace ClaudeMem.Admin.Api;
 

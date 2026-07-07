@@ -2,7 +2,6 @@ using System.Linq;
 using ClaudeMem.Admin.CodeGen.NameGenerators;
 using NJsonSchema;
 using NJsonSchema.CodeGeneration.CSharp;
-using NSwag;
 
 namespace ClaudeMem.Admin.CodeGen;
 

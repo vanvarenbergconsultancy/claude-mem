@@ -1,9 +1,9 @@
+using System.Net;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using AwesomeAssertions.Execution;
 using ClaudeMem.Admin.Api.Contracts;
 using ClaudeMem.Admin.Api.Tests.Infrastructure;
-using System.Net;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace ClaudeMem.Admin.Api.Tests.Features.Projects;

@@ -6,7 +6,6 @@ using AwesomeAssertions;
 using Bunit;
 using ClaudeMem.Admin.Api.Contracts;
 using ClaudeMem.Admin.Ui.Components.Pages;
-using ClaudeMem.Admin.Ui.Services;
 using ClaudeMem.Admin.Ui.Tests.Infrastructure;
 using MudBlazor;
 using NSubstitute;
