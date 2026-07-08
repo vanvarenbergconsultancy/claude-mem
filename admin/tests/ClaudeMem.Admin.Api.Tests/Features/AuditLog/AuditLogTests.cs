@@ -35,7 +35,6 @@ public sealed class AuditLogTests : IAsyncLifetime
     [Fact]
     public async Task GetAuditLog_EmptyDatabase_ReturnsEmptyPage()
     {
-        // TODO check how other tests name the page variant
         var page = await _auditLogClient.AuditLogAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         page.ShouldBeEmptyPage(page.Items);
@@ -62,7 +61,6 @@ public sealed class AuditLogTests : IAsyncLifetime
 
         var page = await _auditLogClient.AuditLogAsync(teamId: team1, cancellationToken: TestContext.Current.CancellationToken);
 
-        // todo: check how other tests deal with this I expected a extension method that would also check page not null, items have count (not null or empty maybe)
         var entry = page.Items.Should().ContainSingle().Subject;
         entry.TeamId.Should().Be(team1);
     }

@@ -180,7 +180,7 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
             }
         }
         // Fix #52: handle column-to-column comparisons (right side is a property access)
-        else if (right.Kind == QueryNodeKind.SingleValuePropertyAccess || right.Kind == QueryNodeKind.SingleValueOpenPropertyAccess)
+        else if (right.Kind is QueryNodeKind.SingleValuePropertyAccess or QueryNodeKind.SingleValueOpenPropertyAccess)
         {
             _query = _query.WhereColumns(GetColumnName(left), op, GetColumnName(right));
         }

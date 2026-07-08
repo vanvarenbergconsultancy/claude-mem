@@ -27,6 +27,7 @@ public sealed class ODataFieldMapBuilder
             TimeSpan.FromSeconds(1));
 
         _mappings.Add((pattern, columnName));
+
         return this;
     }
 
