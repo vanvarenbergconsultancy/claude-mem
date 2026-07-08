@@ -110,11 +110,11 @@ internal static class ApplyClauseBuilder
             {
                 switch (se.Name.ToUpperInvariant())
                 {
-                    case Constants.Dates.Year:
-                    case Constants.Dates.Month:
-                    case Constants.Dates.Day:
-                    case Constants.Dates.Hour:
-                    case Constants.Dates.Minute:
+                    case Constants.Sql.Dates.Year:
+                    case Constants.Sql.Dates.Month:
+                    case Constants.Sql.Dates.Day:
+                    case Constants.Sql.Dates.Hour:
+                    case Constants.Sql.Dates.Minute:
                         var columnName = GetColumnName(se.Parameters.Single());
                         queryIn = queryIn.SelectRaw($"{se.Name}({columnName}) as {computeExpression.Alias}");
                         break;

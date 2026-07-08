@@ -38,7 +38,7 @@
                     <MudChip T="string" Size="Size.Small" Color="Color.Default">@(context.ProjectCount?.ToString() ?? "—")</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Created">
-                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateOnly)</MudText>
+                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formatting.DateOnly)</MudText>
                 </MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small"

@@ -89,16 +89,16 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
 
         switch (nodeIn.Name.ToLowerInvariant())
         {
-            case "contains":
+            case Constants.ODataOperations.ComparisonOperator.Contains:
                 return _query.WhereContains(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive);
 
-            case "endswith":
+            case Constants.ODataOperations.ComparisonOperator.EndsWith:
                 return _query.WhereEnds(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive);
 
-            case "startswith":
+            case Constants.ODataOperations.ComparisonOperator.StartsWith:
                 return _query.WhereStarts(columnName, (string)GetConstantValue(nodes[1])!, caseSensitive);
 
-            case "matchespattern":
+            case Constants.ODataOperations.ComparisonOperator.MatchesPattern:
                 var rawPattern = GetConstantValue(nodes[1]) as string
                     ?? throw new InvalidOperationException("matchespattern requires a string argument.");
 
@@ -199,20 +199,20 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
         var columnName = GetColumnName(leftNode.Parameters.First());
         switch (leftNode.Name.ToUpperInvariant())
         {
-            case Constants.Dates.Year:
-            case Constants.Dates.Month:
-            case Constants.Dates.Day:
-            case Constants.Dates.Hour:
-            case Constants.Dates.Minute:
+            case Constants.Sql.Dates.Year:
+            case Constants.Sql.Dates.Month:
+            case Constants.Sql.Dates.Day:
+            case Constants.Sql.Dates.Hour:
+            case Constants.Sql.Dates.Minute:
                 return q.WhereDatePart(leftNode.Name, columnName, operand, rightValue);
-            case Constants.Dates.Date:
-                return q.WhereDate(columnName, operand, rightValue is DateTime d ? d.ToString(Constants.Dates.DateFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
-            case Constants.Dates.Time:
-                return q.WhereTime(columnName, operand, rightValue is DateTime t ? t.ToString(Constants.Dates.HourFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
-            case Constants.Operations.ToUpper:
-            case Constants.Operations.ToLower:
+            case Constants.Sql.Dates.Date:
+                return q.WhereDate(columnName, operand, rightValue is DateTime d ? d.ToString(Constants.Formatting.DateFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
+            case Constants.Sql.Dates.Time:
+                return q.WhereTime(columnName, operand, rightValue is DateTime t ? t.ToString(Constants.Formatting.HourFormat, CultureInfo.InvariantCulture.DateTimeFormat) : rightValue);
+            case Constants.Sql.Functions.ToUpper:
+            case Constants.Sql.Functions.ToLower:
                 return q.WhereLike(columnName, rightValue, false);
-            case Constants.Operations.IndexOf:
+            case Constants.Sql.Functions.IndexOf:
                 return ApplyIndexOfFunction(q, leftNode, rightValue, columnName);
             default:
                 return q;
@@ -249,8 +249,8 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
     private static (bool CaseSensitive, string ColumnName) GetFunctionCallParameterInfo(bool caseSensitive, string columnName, SingleValueFunctionCallNode paramNode)
     {
         var functionName = paramNode.Name.ToUpperInvariant();
-        if (string.Equals(functionName, Constants.Operations.ToUpper, StringComparison.Ordinal) ||
-            string.Equals(functionName, Constants.Operations.ToLower, StringComparison.Ordinal))
+        if (string.Equals(functionName, Constants.Sql.Functions.ToUpper, StringComparison.Ordinal) ||
+            string.Equals(functionName, Constants.Sql.Functions.ToLower, StringComparison.Ordinal))
         {
             caseSensitive = false;
             columnName = GetColumnName(paramNode.Parameters.First());
@@ -337,14 +337,14 @@ internal sealed class FilterClauseBuilder : QueryNodeVisitor<Query>
 
     private static string GetOperatorString(BinaryOperatorKind operatorKind) => operatorKind switch
     {
-        BinaryOperatorKind.Equal => Constants.BinaryOperators.Equal,
-        BinaryOperatorKind.NotEqual => Constants.BinaryOperators.NotEqual,
-        BinaryOperatorKind.GreaterThan => Constants.BinaryOperators.GreaterThan,
-        BinaryOperatorKind.GreaterThanOrEqual => Constants.BinaryOperators.GreaterThanOrEqual,
-        BinaryOperatorKind.LessThan => Constants.BinaryOperators.LessThan,
-        BinaryOperatorKind.LessThanOrEqual => Constants.BinaryOperators.LessThanOrEqual,
-        BinaryOperatorKind.Or => Constants.BinaryOperators.Or,
-        BinaryOperatorKind.And => Constants.BinaryOperators.And,
+        BinaryOperatorKind.Equal => Constants.ODataOperations.BinaryOperator.Equal,
+        BinaryOperatorKind.NotEqual => Constants.ODataOperations.BinaryOperator.NotEqual,
+        BinaryOperatorKind.GreaterThan => Constants.ODataOperations.BinaryOperator.GreaterThan,
+        BinaryOperatorKind.GreaterThanOrEqual => Constants.ODataOperations.BinaryOperator.GreaterThanOrEqual,
+        BinaryOperatorKind.LessThan => Constants.ODataOperations.BinaryOperator.LessThan,
+        BinaryOperatorKind.LessThanOrEqual => Constants.ODataOperations.BinaryOperator.LessThanOrEqual,
+        BinaryOperatorKind.Or => Constants.ODataOperations.LogicalOperator.Or,
+        BinaryOperatorKind.And => Constants.ODataOperations.LogicalOperator.And,
         _ => string.Empty
     };
 }

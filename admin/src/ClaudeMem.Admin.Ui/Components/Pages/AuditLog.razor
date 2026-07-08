@@ -55,10 +55,10 @@
         <MudTextField @bind-Value="_resourceType" Label="Resource Type" Variant="Variant.Outlined" Margin="Margin.Dense" />
     </MudItem>
     <MudItem>
-        <MudDatePicker Date="_from" DateChanged="@((DateTime? d) => _from = d)" Label="From" DateFormat="yyyy-MM-dd" Margin="Margin.Dense" />
+        <MudDatePicker Date="_from" DateChanged="@((DateTime? d) => _from = d)" Label="From" DateFormat="@AdminUiConstants.Formatting.DateOnly" Margin="Margin.Dense" />
     </MudItem>
     <MudItem>
-        <MudDatePicker Date="_to" DateChanged="@((DateTime? d) => _to = d)" Label="To" DateFormat="yyyy-MM-dd" Margin="Margin.Dense" />
+        <MudDatePicker Date="_to" DateChanged="@((DateTime? d) => _to = d)" Label="To" DateFormat="@AdminUiConstants.Formatting.DateOnly" Margin="Margin.Dense" />
     </MudItem>
     <MudItem Class="d-flex align-center gap-1">
         <MudButton Variant="Variant.Text" OnClick="Reload">Search</MudButton>
@@ -84,7 +84,7 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Created At">
-                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formatting.DateTime)</MudText>
                 </MudTd>
                 <MudTd DataLabel="Team">
                     <MudText Typo="Typo.body2">@(context.TeamName ?? context.TeamId ?? "—")</MudText>
@@ -156,7 +156,7 @@
             </MudItem>
             <MudItem xs="12" sm="6">
                 <MudText Typo="Typo.caption" Class="mud-text-secondary">Created At</MudText>
-                <MudText Typo="Typo.body2">@(_selectedEntry.CreatedAt?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "—")</MudText>
+                <MudText Typo="Typo.body2">@(_selectedEntry.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formatting.DateTime) ?? "—")</MudText>
             </MudItem>
         </MudGrid>
         <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">Details (JSON):</MudText>

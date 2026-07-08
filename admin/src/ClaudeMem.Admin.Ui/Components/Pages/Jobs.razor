@@ -40,11 +40,11 @@
                     <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@context.Status</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Created">
-                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formats.DateAndTime)</MudText>
+                    <MudText Typo="Typo.body2">@context.CreatedAt?.LocalDateTime.ToString(AdminUiConstants.Formatting.DateTime)</MudText>
                 </MudTd>
                 <MudTd DataLabel="Completed/Failed">
                     <MudText Typo="Typo.body2">
-                        @((context.CompletedAt ?? context.FailedAt)?.LocalDateTime.ToString(AdminUiConstants.Formats.DateAndTime) ?? "—")
+                        @((context.CompletedAt ?? context.FailedAt)?.LocalDateTime.ToString(AdminUiConstants.Formatting.DateTime) ?? "—")
                     </MudText>
                 </MudTd>
                 <MudTd>

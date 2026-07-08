@@ -11,4 +11,9 @@
     <PackageReference Include="SqlKata" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="ODataFilter.EfCore" />
+    <InternalsVisibleTo Include="ODataFilter.MudBlazor" />
+  </ItemGroup>
+
 </Project>

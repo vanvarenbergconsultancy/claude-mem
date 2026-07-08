@@ -2,10 +2,10 @@ namespace ClaudeMem.Admin.Ui;
 
 internal static class AdminUiConstants
 {
-    internal static class Formats
+    internal static class Formatting
     {
         internal const string DateOnly = "yyyy-MM-dd";
-        internal const string DateAndTime = "yyyy-MM-dd HH:mm";
+        internal const string DateTime = "yyyy-MM-dd HH:mm:ss";
     }
 
     internal static class JobStatus
