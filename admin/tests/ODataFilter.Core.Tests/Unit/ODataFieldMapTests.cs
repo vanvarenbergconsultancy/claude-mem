@@ -16,6 +16,8 @@ public sealed class ODataFieldMapTests
         var options = new ODataQueryOptions { Filter = "customerId eq 'abc'" };
         var result = map.Apply(options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().Be("client_identifier eq 'abc'");
     }
 
@@ -29,6 +31,8 @@ public sealed class ODataFieldMapTests
         var options = new ODataQueryOptions { OrderBy = "displayName asc" };
         var result = map.Apply(options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.OrderBy.Should().Be("full_name asc");
     }
 
@@ -44,6 +48,7 @@ public sealed class ODataFieldMapTests
         var result = map.Apply(options);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().Contain("client_identifier");
         result.Filter.Should().Contain("team_name");
         result.Filter.Should().NotContain("customerId");
@@ -60,6 +65,8 @@ public sealed class ODataFieldMapTests
         var options = new ODataQueryOptions { Filter = "name eq 'Acme'" };
         var result = map.Apply(options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().Be("name eq 'Acme'");
     }
 
@@ -74,6 +81,8 @@ public sealed class ODataFieldMapTests
         var result = map.Apply(options);
 
         // "id" inside "clientId" must NOT be replaced
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().Be("clientId eq 'x'");
     }
 
@@ -87,6 +96,8 @@ public sealed class ODataFieldMapTests
         var options = new ODataQueryOptions { Filter = "type eq 'name'" };
         var result = map.Apply(options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().Be("type eq 'name'");
     }
 
@@ -100,6 +111,7 @@ public sealed class ODataFieldMapTests
         var result = map.Apply(ODataQueryOptions.Empty);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
         result.Filter.Should().BeNull();
         result.OrderBy.Should().BeNull();
     }

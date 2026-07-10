@@ -17,167 +17,100 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
 {
     private static readonly ODataSqlTranslator Sut = new(new PostgresCompiler());
 
-    // ── NOT function wrappers ───────────────────────────────────────────────
+    // ── IS NULL / IS NOT NULL ─────────────────────────────────────────────────
 
-    [Fact]
-    public void Translate_NotContains_EmitsNotLike()
+    [Theory]
+    [InlineData("deletedAt eq null", @"SELECT * FROM ""items"" WHERE ""deletedAt"" IS NULL")]
+    [InlineData("deletedAt ne null", @"SELECT * FROM ""items"" WHERE ""deletedAt"" IS NOT NULL")]
+    public void Translate_NullFilter_EmitsSql(string filter, string expectedSql)
     {
-        var options = new ODataQueryOptions { Filter = "not contains(name,'xyz')" };
+        var result = Sut.Translate("items", new ODataQueryOptions { Filter = filter });
 
-        var result = Sut.Translate("items", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT");
-        result.Sql.Should().Contain("like");
+        result.Sql.Should().Be(expectedSql);
     }
 
-    [Fact]
-    public void Translate_NotStartsWith_EmitsNotLike()
+    // ── Single string @p0 ─────────────────────────────────────────────────────
+    // Covers: NOT like/ilike, tolower ilike, matchesPattern, indexof, toupper eq
+
+    [Theory]
+    [InlineData("not contains(name,'xyz')",              @"SELECT * FROM ""items"" WHERE NOT (""name"" like @p0)",  "%xyz%")]
+    [InlineData("not startswith(name,'abc')",            @"SELECT * FROM ""items"" WHERE NOT (""name"" like @p0)",  "abc%")]
+    [InlineData("not endswith(name,'xyz')",              @"SELECT * FROM ""items"" WHERE NOT (""name"" like @p0)",  "%xyz")]
+    [InlineData("contains(tolower(name),'xyz')",         @"SELECT * FROM ""items"" WHERE ""name"" ilike @p0",       "%xyz%")]
+    [InlineData("startswith(tolower(name),'abc')",       @"SELECT * FROM ""items"" WHERE ""name"" ilike @p0",       "abc%")]
+    [InlineData("matchesPattern(name,'acme.*')",         @"SELECT * FROM ""items"" WHERE ""name"" like @p0",        "acme%")]
+    [InlineData("matchesPattern(name,'%5Eacme.*')",      @"SELECT * FROM ""items"" WHERE ""name"" like @p0",        "acme%")]
+    [InlineData("matchesPattern(name,'acme$')",          @"SELECT * FROM ""items"" WHERE ""name"" like @p0",        "acme")]
+    [InlineData("indexof(name,'tea') eq -1",             @"SELECT * FROM ""items"" WHERE NOT (""name"" like @p0)",  "%tea%")]
+    [InlineData("indexof(name,'tea') ge 0",              @"SELECT * FROM ""items"" WHERE ""name"" like @p0",        "%tea%")]
+    [InlineData("indexof(tolower(name),'tea') eq -1",    @"SELECT * FROM ""items"" WHERE NOT (""name"" ilike @p0)", "%tea%")]
+    [InlineData("toupper(name) eq 'Tea'",                @"SELECT * FROM ""items"" WHERE ""name"" ilike @p0",       "Tea")]
+    public void Translate_Filter_EmitsSqlWithStringParam(string filter, string expectedSql, string p0)
     {
-        var options = new ODataQueryOptions { Filter = "not startswith(name,'abc')" };
+        var result = Sut.Translate("items", new ODataQueryOptions { Filter = filter });
 
-        var result = Sut.Translate("items", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT");
-        result.Sql.Should().Contain("like");
+        result.Sql.Should().Be(expectedSql);
+        result.Parameters["@p0"].Should().Be(p0);
     }
 
-    [Fact]
-    public void Translate_NotEndsWith_EmitsNotLike()
+    // ── Single int @p0 ────────────────────────────────────────────────────────
+    // Covers: numeric comparisons (lt/le/ge/eq) and date-part functions (year/month/day/hour/minute)
+
+    [Theory]
+    [InlineData("amount lt 100",             "orders", @"SELECT * FROM ""orders"" WHERE ""amount"" < @p0",                          100)]
+    [InlineData("amount le 100",             "orders", @"SELECT * FROM ""orders"" WHERE ""amount"" <= @p0",                         100)]
+    [InlineData("amount ge 50",              "orders", @"SELECT * FROM ""orders"" WHERE ""amount"" >= @p0",                         50)]
+    [InlineData("count eq 0",                "stats",  @"SELECT * FROM ""stats"" WHERE ""count"" = @p0",                            0)]
+    [InlineData("year(createdAt) eq 2024",   "events", @"SELECT * FROM ""events"" WHERE DATE_PART('YEAR', ""createdAt"") = @p0",    2024)]
+    [InlineData("month(createdAt) eq 3",     "events", @"SELECT * FROM ""events"" WHERE DATE_PART('MONTH', ""createdAt"") = @p0",   3)]
+    [InlineData("day(createdAt) ge 15",      "events", @"SELECT * FROM ""events"" WHERE DATE_PART('DAY', ""createdAt"") >= @p0",    15)]
+    [InlineData("hour(startTime) ge 9",      "events", @"SELECT * FROM ""events"" WHERE DATE_PART('HOUR', ""startTime"") >= @p0",   9)]
+    [InlineData("minute(startTime) lt 30",   "events", @"SELECT * FROM ""events"" WHERE DATE_PART('MINUTE', ""startTime"") < @p0",  30)]
+    public void Translate_Filter_EmitsSqlWithIntParam(string filter, string table, string expectedSql, int p0)
     {
-        var options = new ODataQueryOptions { Filter = "not endswith(name,'xyz')" };
+        var result = Sut.Translate(table, new ODataQueryOptions { Filter = filter });
 
-        var result = Sut.Translate("items", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT");
-        result.Sql.Should().Contain("like");
+        result.Sql.Should().Be(expectedSql);
+        result.Parameters["@p0"].Should().Be(p0);
     }
 
-    // ── Case-insensitive via tolower() / toupper() ──────────────────────────
-
-    [Fact]
-    public void Translate_ContainsWithTolower_EmitsCaseInsensitiveLike()
-    {
-        var options = new ODataQueryOptions { Filter = "contains(tolower(name),'xyz')" };
-
-        var result = Sut.Translate("items", options);
-
-        // caseSensitive=false → PostgresCompiler emits ilike
-        result.Sql.Should().Contain("ilike");
-    }
-
-    [Fact]
-    public void Translate_StartsWithTolower_EmitsCaseInsensitiveLike()
-    {
-        var options = new ODataQueryOptions { Filter = "startswith(tolower(name),'abc')" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Sql.Should().Contain("ilike");
-    }
-
-    // ── Null equality ───────────────────────────────────────────────────────
-
-    [Fact]
-    public void Translate_EqNull_EmitsIsNull()
-    {
-        var options = new ODataQueryOptions { Filter = "deletedAt eq null" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Sql.Should().Contain("IS NULL");
-    }
-
-    [Fact]
-    public void Translate_NeNull_EmitsIsNotNull()
-    {
-        var options = new ODataQueryOptions { Filter = "deletedAt ne null" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Sql.Should().Contain("IS NOT NULL");
-    }
-
-    // ── in operator ─────────────────────────────────────────────────────────
+    // ── Cases that don't fit the theory shapes ────────────────────────────────
 
     [Fact]
     public void Translate_InOperator_EmitsInClause()
     {
-        var options = new ODataQueryOptions { Filter = "status in ('active','pending','draft')" };
+        var result = Sut.Translate("items", new ODataQueryOptions { Filter = "status in ('active','pending','draft')" });
 
-        var result = Sut.Translate("items", options);
-
+        result.Sql.Should().Be(@"SELECT * FROM ""items"" WHERE ""status"" IN (@p0, @p1, @p2)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("IN");
-        result.Parameters.Should().HaveCount(3);
-        result.Parameters.Values.Should().Contain("active");
-        result.Parameters.Values.Should().Contain("pending");
-        result.Parameters.Values.Should().Contain("draft");
+        result.Parameters["@p0"].Should().Be("active");
+        result.Parameters["@p1"].Should().Be("pending");
+        result.Parameters["@p2"].Should().Be("draft");
     }
 
     [Fact]
     public void Translate_NotInOperator_EmitsNotIn()
     {
-        var options = new ODataQueryOptions { Filter = "not (status in ('archived','deleted'))" };
+        var result = Sut.Translate("items", new ODataQueryOptions { Filter = "not (status in ('archived','deleted'))" });
 
-        var result = Sut.Translate("items", options);
-
+        result.Sql.Should().Be(@"SELECT * FROM ""items"" WHERE ""status"" NOT IN (@p0, @p1)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT IN");
-    }
-
-    // ── Numeric comparison operators ────────────────────────────────────────
-
-    [Fact]
-    public void Translate_LtFilter_EmitsLessThan()
-    {
-        var options = new ODataQueryOptions { Filter = "amount lt 100" };
-
-        var result = Sut.Translate("orders", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain(" < ");
-        result.Sql.Should().NotContain("<=");
-        result.Parameters.Values.Should().Contain(100);
+        result.Parameters["@p0"].Should().Be("archived");
+        result.Parameters["@p1"].Should().Be("deleted");
     }
 
     [Fact]
-    public void Translate_LeFilter_EmitsLessThanOrEqual()
+    public void Translate_InOperatorWithIntegers_EmitsInClause()
     {
-        var options = new ODataQueryOptions { Filter = "amount le 100" };
+        var result = Sut.Translate("orders", new ODataQueryOptions { Filter = "orderId in (2, 4, 8, 16)" });
 
-        var result = Sut.Translate("orders", options);
-
+        result.Sql.Should().Be(@"SELECT * FROM ""orders"" WHERE ""orderId"" IN (@p0, @p1, @p2, @p3)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("<=");
-        result.Parameters.Values.Should().Contain(100);
+        result.Parameters["@p0"].Should().Be(2);
+        result.Parameters["@p1"].Should().Be(4);
+        result.Parameters["@p2"].Should().Be(8);
+        result.Parameters["@p3"].Should().Be(16);
     }
-
-    [Fact]
-    public void Translate_GeFilter_EmitsGreaterThanOrEqual()
-    {
-        var options = new ODataQueryOptions { Filter = "amount ge 50" };
-
-        var result = Sut.Translate("orders", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain(">=");
-        result.Parameters.Values.Should().Contain(50);
-    }
-
-    [Fact]
-    public void Translate_NumericEq_EmitsEqualWithParameter()
-    {
-        var options = new ODataQueryOptions { Filter = "count eq 0" };
-
-        var result = Sut.Translate("stats", options);
-
-        result.Parameters.Values.Should().Contain(0);
-    }
-
-    // ── Date parsing ─────────────────────────────────────────────────────────
 
     [Fact]
     public void Translate_DateRangeFilter_ParsesDatesToParameters()
@@ -189,150 +122,27 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
 
         var result = Sut.Translate("events", options);
 
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("AND");
         // OData parser yields DateTimeOffset for typed date-time literals (ISO 8601 with timezone)
-        result.Parameters.Values.Should().AllSatisfy(v => v.Should().BeOfType<DateTimeOffset>());
-    }
-
-    // ── matchesPattern ───────────────────────────────────────────────────────
-
-    [Fact]
-    public void Translate_MatchesPattern_EmitsLikeWithPattern()
-    {
-        var options = new ODataQueryOptions { Filter = "matchesPattern(name,'acme.*')" };
-
-        var result = Sut.Translate("items", options);
-
+        result.Sql.Should().Be(@"SELECT * FROM ""events"" WHERE (""createdAt"" >= @p0 AND ""createdAt"" < @p1)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("like");
-        // acme.* → acme% after pattern translation
-        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme%");
+        result.Parameters["@p0"].Should().BeOfType<DateTimeOffset>();
+        result.Parameters["@p1"].Should().BeOfType<DateTimeOffset>();
     }
-
-    // ── Nested / parenthesised logic ─────────────────────────────────────────
 
     [Fact]
     public void Translate_NestedOrInsideAnd_EmitsCorrectGroups()
     {
-        var options = new ODataQueryOptions
+        var result = Sut.Translate("teams", new ODataQueryOptions
         {
             Filter = "(name eq 'Acme' or name eq 'Beta') and active eq true"
-        };
+        });
 
-        var result = Sut.Translate("teams", options);
-
+        // boolean true is inlined; only the two string params are bound
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE ((""name"" = @p0 OR ""name"" = @p1) AND ""active"" = true)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("OR");
-        result.Sql.Should().Contain("AND");
-        // 'Acme' and 'Beta' are parameterized; true is inlined
-        result.Parameters.Should().HaveCount(2);
+        result.Parameters["@p0"].Should().Be("Acme");
+        result.Parameters["@p1"].Should().Be("Beta");
     }
-
-    // ── TranslateToQuery ─────────────────────────────────────────────────────
-
-    [Fact]
-    public void TranslateToQuery_ReturnsComposableQuery()
-    {
-        var options = new ODataQueryOptions { Filter = "active eq true" };
-
-        var query = Sut.TranslateToQuery("teams", options);
-
-        var compiled = new PostgresCompiler().Compile(query);
-        compiled.Sql.Should().Contain("WHERE");
-    }
-
-    [Fact]
-    public void TranslateToQuery_AllowsJoinComposition()
-    {
-        var options = new ODataQueryOptions { Filter = "active eq true" };
-
-        var query = Sut.TranslateToQuery("teams", options)
-            .Join("customers", "customers.id", "teams.customerId")
-            .Select("teams.*", "customers.name AS customerName");
-
-        var compiled = new PostgresCompiler().Compile(query);
-        using var scope = new AssertionScope();
-        compiled.Sql.Should().Contain("JOIN");
-        compiled.Sql.Should().Contain("customers");
-    }
-
-    [Fact]
-    public void TranslateToQuery_WithEmptyOptions_ReturnsSelectStarQuery()
-    {
-        var query = Sut.TranslateToQuery("teams", ODataQueryOptions.Empty);
-
-        var compiled = new PostgresCompiler().Compile(query);
-        compiled.Sql.Should().Be("SELECT * FROM \"teams\"");
-    }
-
-    // ── indexof() function ────────────────────────────────────────────────────
-
-    [Fact]
-    public void Translate_IndexOfEqNegativeOne_EmitsNotLike()
-    {
-        // indexof(name,'tea') eq -1 → does not contain 'tea'
-        var options = new ODataQueryOptions { Filter = "indexof(name,'tea') eq -1" };
-
-        var result = Sut.Translate("items", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT");
-        result.Sql.Should().Contain("like");
-    }
-
-    [Fact]
-    public void Translate_IndexOfEqPositive_EmitsLike()
-    {
-        // indexof(name,'tea') ge 0 → contains 'tea'
-        var options = new ODataQueryOptions { Filter = "indexof(name,'tea') ge 0" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Sql.Should().Contain("like");
-    }
-
-    [Fact]
-    public void Translate_IndexOfWithTolower_EmitsCaseInsensitiveNotLike()
-    {
-        // indexof(tolower(name),'tea') eq -1 → does not contain 'tea' case-insensitively
-        var options = new ODataQueryOptions { Filter = "indexof(tolower(name),'tea') eq -1" };
-
-        var result = Sut.Translate("items", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("NOT");
-        result.Sql.Should().Contain("ilike");
-    }
-
-    // ── toupper/tolower direct equality ───────────────────────────────────────
-
-    [Fact]
-    public void Translate_TolowerEq_EmitsCaseInsensitiveLike()
-    {
-        // toupper(name) eq 'Tea' → case-insensitive match (WhereLike with false)
-        var options = new ODataQueryOptions { Filter = "toupper(name) eq 'Tea'" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Sql.Should().Contain("ilike");
-    }
-
-    // ── Integer in-operator ───────────────────────────────────────────────────
-
-    [Fact]
-    public void Translate_InOperatorWithIntegers_EmitsInClause()
-    {
-        var options = new ODataQueryOptions { Filter = "orderId in (2, 4, 8, 16)" };
-
-        var result = Sut.Translate("orders", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("IN");
-        result.Parameters.Should().HaveCount(4);
-    }
-
-    // ── Advanced compound filter ──────────────────────────────────────────────
 
     [Fact]
     public void Translate_ComplexAndOrNotFilter_EmitsCorrectClauses()
@@ -345,106 +155,30 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
 
         var result = Sut.Translate("products", options);
 
+        result.Sql.Should().Be(
+            @"SELECT * FROM ""products"" WHERE " +
+            @"((""name"" like @p0 OR (""inventory"" >= @p1 AND ""inventory"" <= @p2)) " +
+            @"AND NOT (""origin"" = @p3 OR ""origin"" = @p4))");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("like");
-        result.Sql.Should().Contain("AND");
-        result.Sql.Should().Contain("OR");
-        result.Sql.Should().Contain("NOT");
+        result.Parameters["@p0"].Should().Be("%Tea%");
+        result.Parameters["@p1"].Should().Be(100);
+        result.Parameters["@p2"].Should().Be(200);
+        result.Parameters["@p3"].Should().Be("US");
+        result.Parameters["@p4"].Should().Be("UK");
     }
 
-    // ── Date-part functions ───────────────────────────────────────────────────
-
     [Fact]
-    public void Translate_YearFunction_EmitsDatePartClause()
+    public void Translate_AndFilterCombined_InjectsScopeBeforeUserFilter()
     {
-        // PostgresCompiler renders WhereDatePart as DATE_PART('YEAR', col)
-        var options = new ODataQueryOptions { Filter = "year(createdAt) eq 2024" };
+        var scoped = new ODataQueryOptions { Filter = "name eq 'Acme'" }.AndFilter("tenantId eq 'abc'");
 
-        var result = Sut.Translate("events", options);
+        var result = Sut.Translate("teams", scoped);
 
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE (""name"" = @p0 AND ""tenantId"" = @p1)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("DATE_PART");
-        result.Sql.Should().Contain("'YEAR'");
-        result.Parameters.Values.Should().Contain(2024);
+        result.Parameters["@p0"].Should().Be("Acme");
+        result.Parameters["@p1"].Should().Be("abc");
     }
-
-    [Fact]
-    public void Translate_MonthFunction_EmitsDatePartClause()
-    {
-        var options = new ODataQueryOptions { Filter = "month(createdAt) eq 3" };
-
-        var result = Sut.Translate("events", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("DATE_PART");
-        result.Sql.Should().Contain("'MONTH'");
-        result.Parameters.Values.Should().Contain(3);
-    }
-
-    [Fact]
-    public void Translate_DayFunction_EmitsDatePartClause()
-    {
-        var options = new ODataQueryOptions { Filter = "day(createdAt) ge 15" };
-
-        var result = Sut.Translate("events", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("DATE_PART");
-        result.Sql.Should().Contain("'DAY'");
-        result.Parameters.Values.Should().Contain(15);
-    }
-
-    [Fact]
-    public void Translate_HourFunction_EmitsDatePartClause()
-    {
-        var options = new ODataQueryOptions { Filter = "hour(startTime) ge 9" };
-
-        var result = Sut.Translate("events", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("DATE_PART");
-        result.Sql.Should().Contain("'HOUR'");
-        result.Parameters.Values.Should().Contain(9);
-    }
-
-    [Fact]
-    public void Translate_MinuteFunction_EmitsDatePartClause()
-    {
-        var options = new ODataQueryOptions { Filter = "minute(startTime) lt 30" };
-
-        var result = Sut.Translate("events", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("DATE_PART");
-        result.Sql.Should().Contain("'MINUTE'");
-        result.Parameters.Values.Should().Contain(30);
-    }
-
-    // ── matchesPattern anchor variants ────────────────────────────────────────
-
-    [Fact]
-    public void Translate_MatchesPattern_EncodedStartAnchor_IsStripped()
-    {
-        // URL-encoded ^ (%5E) at the start is a start anchor — stripped before the LIKE pattern
-        var options = new ODataQueryOptions { Filter = "matchesPattern(name,'%5Eacme.*')" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme%");
-    }
-
-    [Fact]
-    public void Translate_MatchesPattern_DollarSuffixAnchor_IsStripped()
-    {
-        // Trailing $ is an end anchor — stripped from the LIKE pattern
-        var options = new ODataQueryOptions { Filter = "matchesPattern(name,'acme$')" };
-
-        var result = Sut.Translate("items", options);
-
-        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "acme");
-    }
-
-    // ── Unsupported right-side node kinds ─────────────────────────────────────
 
     [Fact]
     public void Translate_RightSideFunctionCall_ThrowsNotSupported()
@@ -453,26 +187,41 @@ public sealed class ODataSqlTranslatorFilterFunctionTests
         // ApplyComparisonOperator only handles Constant and PropertyAccess on the right side.
         // This test verifies that unhandled right-side kinds throw rather than silently
         // returning a WHERE-less query (which would return all rows with no error).
-        var options = new ODataQueryOptions { Filter = "name eq toupper('Acme')" };
-
-        var action = () => Sut.Translate("items", options);
+        var action = () => Sut.Translate("items", new ODataQueryOptions { Filter = "name eq toupper('Acme')" });
 
         action.Should().Throw<NotSupportedException>();
     }
 
-    // ── AndFilter SQL integration ─────────────────────────────────────────────
+    // ── TranslateToQuery ─────────────────────────────────────────────────────
 
     [Fact]
-    public void Translate_AndFilterCombined_InjectsScopeBeforeUserFilter()
+    public void TranslateToQuery_ReturnsComposableQuery()
     {
-        var userOptions = new ODataQueryOptions { Filter = "name eq 'Acme'" };
-        var scoped = userOptions.AndFilter("tenantId eq 'abc'");
+        var query = Sut.TranslateToQuery("teams", new ODataQueryOptions { Filter = "active eq true" });
 
-        var result = Sut.Translate("teams", scoped);
+        var compiled = new PostgresCompiler().Compile(query);
+        compiled.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE ""active"" = true");
+    }
 
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("AND");
-        result.Parameters.Values.Should().Contain("Acme");
-        result.Parameters.Values.Should().Contain("abc");
+    [Fact]
+    public void TranslateToQuery_AllowsJoinComposition()
+    {
+        var query = Sut.TranslateToQuery("teams", new ODataQueryOptions { Filter = "active eq true" })
+            .Join("customers", "customers.id", "teams.customerId")
+            .Select("teams.*", "customers.name AS customerName");
+
+        var compiled = new PostgresCompiler().Compile(query);
+        // SqlKata emits a newline before INNER JOIN
+        compiled.Sql.Should().Be(
+            @"SELECT ""teams"".*, ""customers"".""name"" AS ""customerName"" FROM ""teams"" " + "\n" +
+            @"INNER JOIN ""customers"" ON ""customers"".""id"" = ""teams"".""customerId"" WHERE ""active"" = true");
+    }
+
+    [Fact]
+    public void TranslateToQuery_WithEmptyOptions_ReturnsSelectStarQuery()
+    {
+        var compiled = new PostgresCompiler().Compile(Sut.TranslateToQuery("teams", ODataQueryOptions.Empty));
+
+        compiled.Sql.Should().Be(@"SELECT * FROM ""teams""");
     }
 }

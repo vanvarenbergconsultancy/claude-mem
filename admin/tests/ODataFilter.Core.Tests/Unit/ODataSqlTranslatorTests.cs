@@ -12,175 +12,105 @@ public sealed class ODataSqlTranslatorTests
 {
     private static readonly ODataSqlTranslator Sut = new(new PostgresCompiler());
 
+    // ── Basic filter → single string param ──────────────────────────────────
+
+    [Theory]
+    [InlineData("name eq 'Acme'",       "teams", @"SELECT * FROM ""teams"" WHERE ""name"" = @p0",      "Acme")]
+    [InlineData("contains(name,'acme')", "teams", @"SELECT * FROM ""teams"" WHERE ""name"" like @p0",  "%acme%")]
+    [InlineData("startswith(name,'ac')", "teams", @"SELECT * FROM ""teams"" WHERE ""name"" like @p0",  "ac%")]
+    [InlineData("endswith(name,'me')",   "teams", @"SELECT * FROM ""teams"" WHERE ""name"" like @p0",  "%me")]
+    public void Translate_Filter_EmitsSqlWithStringParam(string filter, string table, string expectedSql, string p0)
+    {
+        var result = Sut.Translate(table, new ODataQueryOptions { Filter = filter });
+
+        result.Sql.Should().Be(expectedSql);
+        result.Parameters["@p0"].Should().Be(p0);
+    }
+
+    // ── OrderBy ──────────────────────────────────────────────────────────────
+
+    [Theory]
+    // PostgresCompiler omits ASC keyword (it is the default direction in SQL)
+    [InlineData("name asc",                  @"SELECT * FROM ""teams"" ORDER BY ""name""")]
+    [InlineData("createdAt desc",            @"SELECT * FROM ""teams"" ORDER BY ""createdAt"" DESC")]
+    [InlineData("name asc, createdAt desc",  @"SELECT * FROM ""teams"" ORDER BY ""name"", ""createdAt"" DESC")]
+    public void Translate_OrderBy_EmitsSql(string orderBy, string expectedSql)
+    {
+        var result = Sut.Translate("teams", new ODataQueryOptions { OrderBy = orderBy });
+
+        result.Sql.Should().Be(expectedSql);
+    }
+
+    // ── Cases that don't fit the theory shapes ────────────────────────────────
+
     [Fact]
     public void Translate_NoOptions_EmitsSelectStar()
     {
         var result = Sut.Translate("teams", ODataQueryOptions.Empty);
 
         using var scope = new AssertionScope();
-        result.Sql.Should().Be("SELECT * FROM \"teams\"");
+        result.Sql.Should().Be(@"SELECT * FROM ""teams""");
         result.Parameters.Should().BeEmpty();
-    }
-
-    [Fact]
-    public void Translate_EqFilter_EmitsWhereClause()
-    {
-        var options = new ODataQueryOptions { Filter = "name eq 'Acme'" };
-
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("WHERE");
-        result.Sql.Should().Contain("\"name\"");
-        result.Parameters.Should().ContainValue("Acme");
     }
 
     [Fact]
     public void Translate_NeFilter_EmitsNotEqualClause()
     {
-        var options = new ODataQueryOptions { Filter = "active ne false" };
+        // SqlKata PostgresCompiler emits != (not <>) and inlines boolean literals (no binding)
+        var result = Sut.Translate("teams", new ODataQueryOptions { Filter = "active ne false" });
 
-        var result = Sut.Translate("teams", options);
-
-        // SqlKata PostgresCompiler emits != (not <>)
-        result.Sql.Should().Contain("!=");
-    }
-
-    [Fact]
-    public void Translate_ContainsFilter_EmitsLike()
-    {
-        var options = new ODataQueryOptions { Filter = "contains(name,'acme')" };
-
-        var result = Sut.Translate("teams", options);
-
-        // caseSensitive=true (default) generates LIKE; use tolower() wrapper for ILIKE
-        result.Sql.Should().Contain("like");
-    }
-
-    [Fact]
-    public void Translate_StartsWithFilter_EmitsPrefixLike()
-    {
-        var options = new ODataQueryOptions { Filter = "startswith(name,'ac')" };
-
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("like");
-        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "ac%");
-    }
-
-    [Fact]
-    public void Translate_EndsWithFilter_EmitsSuffixLike()
-    {
-        var options = new ODataQueryOptions { Filter = "endswith(name,'me')" };
-
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("like");
-        result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "%me");
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE ""active"" != false");
     }
 
     [Fact]
     public void Translate_GtFilter_EmitsGreaterThan()
     {
-        var options = new ODataQueryOptions { Filter = "createdAt gt 2024-01-01T00:00:00Z" };
+        var result = Sut.Translate("events", new ODataQueryOptions { Filter = "createdAt gt 2024-01-01T00:00:00Z" });
 
-        var result = Sut.Translate("events", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain(" > ");
-        result.Parameters.Values.Should().ContainSingle(v => v is DateTimeOffset);
+        result.Sql.Should().Be(@"SELECT * FROM ""events"" WHERE ""createdAt"" > @p0");
+        result.Parameters["@p0"].Should().BeOfType<DateTimeOffset>();
     }
 
     [Fact]
     public void Translate_AndFilter_EmitsAndClause()
     {
-        var options = new ODataQueryOptions { Filter = "active eq true and name eq 'Acme'" };
+        // boolean literal true is inlined; only the string param is bound
+        var result = Sut.Translate("teams", new ODataQueryOptions { Filter = "active eq true and name eq 'Acme'" });
 
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("AND");
-        result.Parameters.Should().ContainSingle();
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE (""active"" = true AND ""name"" = @p0)");
+        result.Parameters["@p0"].Should().Be("Acme");
     }
 
     [Fact]
     public void Translate_OrFilter_EmitsOrClause()
     {
-        var options = new ODataQueryOptions { Filter = "name eq 'Acme' or name eq 'Beta'" };
+        var result = Sut.Translate("teams", new ODataQueryOptions { Filter = "name eq 'Acme' or name eq 'Beta'" });
 
-        var result = Sut.Translate("teams", options);
-
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE (""name"" = @p0 OR ""name"" = @p1)");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("OR");
-        result.Parameters.Should().HaveCount(2);
-        result.Parameters.Values.Should().Contain("Acme");
-        result.Parameters.Values.Should().Contain("Beta");
-    }
-
-    [Fact]
-    public void Translate_OrderByAsc_EmitsOrderByAsc()
-    {
-        var options = new ODataQueryOptions { OrderBy = "name asc" };
-
-        var result = Sut.Translate("teams", options);
-
-        // PostgresCompiler omits ASC keyword (it is the default direction in SQL)
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("ORDER BY");
-        result.Sql.Should().Contain("\"name\"");
-    }
-
-    [Fact]
-    public void Translate_OrderByDesc_EmitsOrderByDesc()
-    {
-        var options = new ODataQueryOptions { OrderBy = "createdAt desc" };
-
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("ORDER BY");
-        result.Sql.Should().Contain("DESC");
-    }
-
-    [Fact]
-    public void Translate_MultipleOrderBy_EmitsCommaSeparated()
-    {
-        var options = new ODataQueryOptions { OrderBy = "name asc, createdAt desc" };
-
-        var result = Sut.Translate("teams", options);
-
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("\"name\"");
-        result.Sql.Should().Contain("\"createdAt\"");
+        result.Parameters["@p0"].Should().Be("Acme");
+        result.Parameters["@p1"].Should().Be("Beta");
     }
 
     [Fact]
     public void Translate_TopOption_EmitsLimit()
     {
-        var options = new ODataQueryOptions { Top = 10 };
+        // SqlKata parameterizes LIMIT values
+        var result = Sut.Translate("teams", new ODataQueryOptions { Top = 10 });
 
-        var result = Sut.Translate("teams", options);
-
-        // SqlKata parameterizes LIMIT values (LIMIT @p0 with @p0=10)
-        using var scope = new AssertionScope();
-        result.Sql.Should().Contain("LIMIT");
-        result.Parameters.Values.Should().Contain(10);
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" LIMIT @p0");
+        result.Parameters["@p0"].Should().Be(10);
     }
 
     [Fact]
     public void Translate_TopWithFilter_EmitsBothWhereAndLimit()
     {
-        // int? Top goes through ToString() before reaching the OData parser so a
-        // non-integer $top string is not reachable via the public API
         var result = Sut.Translate("teams", new ODataQueryOptions { Filter = "name eq 'x'", Top = 5 });
 
+        result.Sql.Should().Be(@"SELECT * FROM ""teams"" WHERE ""name"" = @p0 LIMIT @p1");
         using var scope = new AssertionScope();
-        result.Sql.Should().Contain("WHERE");
-        result.Sql.Should().Contain("LIMIT");
-        result.Parameters.Values.Should().Contain("x");
-        result.Parameters.Values.Should().Contain(5);
+        result.Parameters["@p0"].Should().Be("x");
+        result.Parameters["@p1"].Should().Be(5);
     }
 
     [Fact]

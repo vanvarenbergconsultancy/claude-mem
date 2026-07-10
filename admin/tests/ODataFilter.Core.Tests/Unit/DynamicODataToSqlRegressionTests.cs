@@ -34,6 +34,8 @@ public sealed class DynamicODataToSqlRegressionTests
         var result = Sut.Translate("teams", options);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().StartWith("SELECT");
         result.Parameters.Should().NotBeEmpty();
     }
@@ -48,6 +50,9 @@ public sealed class DynamicODataToSqlRegressionTests
 
         var result = Sut.Translate("table", options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().Contain("\"col2\"");
     }
 
@@ -60,6 +65,9 @@ public sealed class DynamicODataToSqlRegressionTests
 
         var result = Sut.Translate("table", options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().Contain("\"spaced col\"");
     }
 
@@ -73,6 +81,8 @@ public sealed class DynamicODataToSqlRegressionTests
         var result = Sut.Translate("ranges", options);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().Contain("\"startId\"");
         result.Sql.Should().Contain("\"endId\"");
         result.Sql.Should().Contain("<>");
@@ -87,6 +97,8 @@ public sealed class DynamicODataToSqlRegressionTests
         var result = Sut.Translate("items", options);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().Contain("\"foreignKey\"");
         result.Sql.Should().Contain("\"primaryKey\"");
         result.Parameters.Should().BeEmpty();
@@ -101,6 +113,10 @@ public sealed class DynamicODataToSqlRegressionTests
 
         var result = Sut.Translate("items", options);
 
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
+        result.Parameters.Should().NotBeNullOrEmpty();
         result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "Test ");
     }
 
@@ -110,7 +126,11 @@ public sealed class DynamicODataToSqlRegressionTests
         var options = new ODataQueryOptions { Filter = "name eq ' Test'" };
 
         var result = Sut.Translate("items", options);
-
+        
+        using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
+        result.Parameters.Should().NotBeNullOrEmpty();
         result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == " Test");
     }
 
@@ -127,8 +147,11 @@ public sealed class DynamicODataToSqlRegressionTests
         var result = Sut.Translate("items", options);
 
         using var scope = new AssertionScope();
+        result.Should().NotBeNull();
+        result.Sql.Should().NotBeNull();
         result.Sql.Should().Contain("\"name\"");
         result.Sql.Should().NotContain("'name'");
+        result.Parameters.Should().NotBeNullOrEmpty();
         result.Parameters.Values.Should().ContainSingle(v => v is string && (string)v == "Acme");
     }
 
